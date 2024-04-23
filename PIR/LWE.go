@@ -1,10 +1,8 @@
 package pir
 
-import "gonum.org/v1/gonum/mat"
-
 var M = 100
 var N = 10
-var q = 65521
+var q int64 = 65521
 
 type encryption struct {
 	A Matrix
@@ -26,11 +24,12 @@ func ENC(secret Matrix, v Matrix) encryption {
 
 }
 
-func DEC(secret mat.Dense, A mat.Dense, b mat.Dense) mat.Dense {
+func DEC(secret Matrix, A Matrix, b Matrix) Matrix {
 	As := MakeMatrix(1, N, 0)
 	As.Mupltiply(A, secret)
 
-	c := copy(b)
+	c := Copy(b)
+
 	c.Subtract(As)
 
 	c.LWERound()

@@ -7,10 +7,10 @@ import (
 )
 
 type Matrix struct {
-	Data     []int
+	Data     []int64
 	Rows     int
 	Collumns int
-	q        int
+	q        int64
 }
 
 func nrand() int64 {
@@ -25,19 +25,25 @@ func nrand() int64 {
 // 1 = Random Matrix
 func MakeMatrix(Rows int, Collumns int, MType int) Matrix {
 	if MType == 0 {
-		return Matrix{Data: make(int[], Rows*Collumns), Rows: Rows, Collumns: Collumns, q: 65521}
-	}else if MType == 1{
-		M :=  Matrix{Data: make(int[], Rows*Collumns), Rows: Rows, Collumns: Collumns, q: 65521}
-		for i:= 0; i< M.Rows; i++{
-			for j:=0; jk< M.Collumns; j++{
-				M.Set(i, j, nrand() % M.q)
+		return Matrix{Data: make([]int64, Rows*Collumns), Rows: Rows, Collumns: Collumns, q: 65521}
+	} else if MType == 1 {
+		M := Matrix{Data: make([]int64, Rows*Collumns), Rows: Rows, Collumns: Collumns, q: 65521}
+		for i := 0; i < M.Rows; i++ {
+			for j := 0; j < M.Collumns; j++ {
+				M.Set(i, j, nrand()%M.q)
 			}
 		}
 		return M
 	}
+	fmt.Print("incorrect MType")
+	return Matrix{Data: make([]int64, 0), Rows: 0, Collumns: 0, q: 0}
 }
 
-
+func Copy(A Matrix) Matrix {
+	C := Matrix{Data: make([]int64, A.Rows*A.Collumns), Rows: A.Rows, Collumns: A.Collumns, q: A.q}
+	copy(C.Data, A.Data)
+	return C
+}
 
 func (C *Matrix) Mupltiply(B Matrix, A Matrix) {
 
@@ -58,53 +64,50 @@ func (C *Matrix) Mupltiply(B Matrix, A Matrix) {
 }
 
 func (A *Matrix) Add(B Matrix) {
-	if A.Collumns != B.Collumns || A.Rows != B.Rows{
+	if A.Collumns != B.Collumns || A.Rows != B.Rows {
 		fmt.Printf("wrong Size Matrix")
 		return
 	}
-	for i:= 0; i< A.Rows; i++{
-		for j:=0; jk< A.Collumns; j++{
-			A.AddToIndex(i, j, B.Get(i,j))
+	for i := 0; i < A.Rows; i++ {
+		for j := 0; j < A.Collumns; j++ {
+			A.AddToIndex(i, j, B.Get(i, j))
 		}
 	}
 }
-func (A *Matrix) Suntract(B Matrix) {
-	if A.Collumns != B.Collumns || A.Rows != B.Rows{
+func (A *Matrix) Subtract(B Matrix) {
+	if A.Collumns != B.Collumns || A.Rows != B.Rows {
 		fmt.Printf("wrong Size Matrix")
 		return
 	}
-	for i:= 0; i< A.Rows; i++{
-		for j:=0; jk< A.Collumns; j++{
-			A.AddToIndex(i, j, -B.Get(i,j))
+	for i := 0; i < A.Rows; i++ {
+		for j := 0; j < A.Collumns; j++ {
+			A.AddToIndex(i, j, -B.Get(i, j))
 		}
 	}
 }
 
-func (A *Matrix) AddError(max_error int) {
-	for i:= 0; i< A.Rows; i++{
-		for j:=0; jk< A.Collumns; j++{
-			A.AddToIndex(i, j, nrand() % int64(max_error))
+func (A *Matrix) AddError(max_error int64) {
+	for i := 0; i < A.Rows; i++ {
+		for j := 0; j < A.Collumns; j++ {
+			A.AddToIndex(i, j, nrand()%int64(max_error))
 		}
 	}
 }
 
 func (A *Matrix) LWERound() {
-	for i:= 0; i< A.Rows; i++{
-		for j:=0; jk< A.Collumns; j++{
+	for i := 0; i < A.Rows; i++ {
+		for j := 0; j < A.Collumns; j++ {
 			val := A.Get(i, j)
-			if val < A.q/4 || val > 3*A.q/4{
+			if val < A.q/4 || val > 3*A.q/4 {
 				A.Set(i, j, 0)
-			}else{
+			} else {
 				A.Set(i, j, 1)
 			}
 		}
 	}
 }
 
-
-
-
-func (A *Matrix) ScalarMupltiply(value int) {
+func (A *Matrix) ScalarMupltiply(value int64) {
 	for j := 0; j < A.Rows; j++ {
 		for i := 0; i < A.Collumns; i++ {
 			A.MupltiplyToIndex(j, i, value)
@@ -112,18 +115,17 @@ func (A *Matrix) ScalarMupltiply(value int) {
 	}
 }
 
-
-func (A *Matrix) Get(row int, collumn int) int {
+func (A *Matrix) Get(row int, collumn int) int64 {
 	return A.Data[row*A.Collumns+collumn]
 }
 
-func (A *Matrix) Set(row int, collumn int, value int) {
+func (A *Matrix) Set(row int, collumn int, value int64) {
 	A.Data[row*A.Collumns+collumn] = value
 }
 
-func (A *Matrix) MupltiplyToIndex(row int, collumn int, value int) {
-	A.Data[row*A.Collumns+collumn] = (A.Data[row*A.Collumns+collumn] * value) % M.q
+func (A *Matrix) MupltiplyToIndex(row int, collumn int, value int64) {
+	A.Data[row*A.Collumns+collumn] = (A.Data[row*A.Collumns+collumn] * value) % A.q
 }
-func (A *Matrix) AddToIndex(row int, collumn int, value int) {
-	A.Data[row*A.Collumns+collumn] = (A.Data[row*A.Collumns+collumn] + value) % M.q
+func (A *Matrix) AddToIndex(row int, collumn int, value int64) {
+	A.Data[row*A.Collumns+collumn] = (A.Data[row*A.Collumns+collumn] + value) % A.q
 }
