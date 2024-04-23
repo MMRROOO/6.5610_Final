@@ -7,8 +7,8 @@ var N = 10
 var q = 65521
 
 type encryption struct {
-	A mat.Dense
-	b mat.Dense
+	A Matrix
+	b Matrix
 }
 
 func ENC(secret Matrix, v Matrix) encryption {
@@ -17,7 +17,7 @@ func ENC(secret Matrix, v Matrix) encryption {
 	b := MakeMatrix(1, N, 0)
 
 	b.Mupltiply(A, secret)
-	b.AddError()
+	b.AddError(q / 4)
 	v.ScalarMupltiply(q / 2)
 	b.Add((v))
 
@@ -27,10 +27,13 @@ func ENC(secret Matrix, v Matrix) encryption {
 }
 
 func DEC(secret mat.Dense, A mat.Dense, b mat.Dense) mat.Dense {
-	var As mat.Dense
-	As.mul(A, secret)
-	var c mat.Dense
-	c.sub(b - As)
+	As := MakeMatrix(1, N, 0)
+	As.Mupltiply(A, secret)
+
+	c := copy(b)
+	c.Subtract(As)
+
+	c.LWERound()
 
 	return c
 

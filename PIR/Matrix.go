@@ -37,13 +37,6 @@ func MakeMatrix(Rows int, Collumns int, MType int) Matrix {
 	}
 }
 
-func (A *Matrix) AddError(max_error int) {
-	for i:= 0; i< A.Rows; i++{
-		for j:=0; jk< A.Collumns; j++{
-			M.Set(i, j, nrand() % M.q)
-		}
-	}
-}
 
 
 func (C *Matrix) Mupltiply(B Matrix, A Matrix) {
@@ -64,6 +57,53 @@ func (C *Matrix) Mupltiply(B Matrix, A Matrix) {
 	}
 }
 
+func (A *Matrix) Add(B Matrix) {
+	if A.Collumns != B.Collumns || A.Rows != B.Rows{
+		fmt.Printf("wrong Size Matrix")
+		return
+	}
+	for i:= 0; i< A.Rows; i++{
+		for j:=0; jk< A.Collumns; j++{
+			A.AddToIndex(i, j, B.Get(i,j))
+		}
+	}
+}
+func (A *Matrix) Suntract(B Matrix) {
+	if A.Collumns != B.Collumns || A.Rows != B.Rows{
+		fmt.Printf("wrong Size Matrix")
+		return
+	}
+	for i:= 0; i< A.Rows; i++{
+		for j:=0; jk< A.Collumns; j++{
+			A.AddToIndex(i, j, -B.Get(i,j))
+		}
+	}
+}
+
+func (A *Matrix) AddError(max_error int) {
+	for i:= 0; i< A.Rows; i++{
+		for j:=0; jk< A.Collumns; j++{
+			A.AddToIndex(i, j, nrand() % int64(max_error))
+		}
+	}
+}
+
+func (A *Matrix) LWERound() {
+	for i:= 0; i< A.Rows; i++{
+		for j:=0; jk< A.Collumns; j++{
+			val := A.Get(i, j)
+			if val < A.q/4 || val > 3*A.q/4{
+				A.Set(i, j, 0)
+			}else{
+				A.Set(i, j, 1)
+			}
+		}
+	}
+}
+
+
+
+
 func (A *Matrix) ScalarMupltiply(value int) {
 	for j := 0; j < A.Rows; j++ {
 		for i := 0; i < A.Collumns; i++ {
@@ -71,6 +111,7 @@ func (A *Matrix) ScalarMupltiply(value int) {
 		}
 	}
 }
+
 
 func (A *Matrix) Get(row int, collumn int) int {
 	return A.Data[row*A.Collumns+collumn]
