@@ -1,9 +1,0 @@
-0. Make program to check last level cache inclusivity
-1. L1/L2 cache side channel attack -done
-2. LLC large page table side channel attack 
-think about non-inclusivity
-3. LLC no large page table side channel attack
-4. LLC noisy large page table
-5. 3&4
-6. Find way to Identify correct LLC eviction Set
-7. Co-locate program on cloud environment
