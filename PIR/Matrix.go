@@ -45,6 +45,39 @@ func Copy(A Matrix) Matrix {
 	return C
 }
 
+func EncryptionFromMatrix(Ans Matrix) encryption {
+	A := MakeMatrix(Ans.Rows, Ans.Collumns-1, 0)
+
+	for i := 0; i < Ans.Rows; i++ {
+		for j := 0; j < Ans.Collumns-1; j++ {
+			A.Set(i, j, Ans.Get(i, j))
+		}
+	}
+	b := MakeMatrix(Ans.Rows, 1, 0)
+	for i := 0; i < Ans.Rows-1; i++ {
+		b.Set(i, 1, Ans.Get(i, Ans.Collumns-1))
+	}
+
+	return encryption{A: A, b: b}
+
+}
+
+func MatrixFromEncryption(E encryption) Matrix {
+
+	C := Matrix{Data: make([]int64, E.A.Rows*(E.A.Collumns+1)), Rows: E.A.Rows, Collumns: E.A.Collumns + 1, q: E.A.q}
+	for i := 0; i < E.A.Rows; i++ {
+		for j := 0; j < (E.A.Collumns + 1); j++ {
+			if j == E.A.Collumns {
+				C.Data[i*(E.A.Collumns+1)+j] = E.b.Get(i, 0)
+			} else {
+				C.Data[i*(E.A.Collumns+1)+j] = E.A.Get(i, j)
+			}
+		}
+	}
+
+	return C
+}
+
 func (C *Matrix) Mupltiply(B Matrix, A Matrix) {
 
 	// C := Matrix{Data: make([]int, A.Rows*B.Collumns), Rows: A.Rows, Collumns: B.Collumns}
@@ -116,11 +149,11 @@ func (A *Matrix) ScalarMupltiply(value int64) {
 }
 
 func (A *Matrix) Get(row int, collumn int) int64 {
-	return A.Data[row*A.Collumns+collumn]
+	return A.Data[row*A.Collumns+collumn] % A.q
 }
 
 func (A *Matrix) Set(row int, collumn int, value int64) {
-	A.Data[row*A.Collumns+collumn] = value
+	A.Data[row*A.Collumns+collumn] = value % A.q
 }
 
 func (A *Matrix) MupltiplyToIndex(row int, collumn int, value int64) {

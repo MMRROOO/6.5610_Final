@@ -1,5 +1,7 @@
 package pir
 
+import "fmt"
+
 var M = 100
 var N = 10
 var q int64 = 65521
@@ -35,5 +37,19 @@ func DEC(secret Matrix, A Matrix, b Matrix) Matrix {
 	c.LWERound()
 
 	return c
+
+}
+
+func main() {
+	secret := MakeMatrix(1, N, 0)
+
+	v := MakeMatrix(1, N, 1)
+	v.LWERound()
+
+	enc := ENC(secret, v)
+
+	dec := DEC(secret, enc.A, enc.b)
+
+	fmt.Print(dec.Data[0])
 
 }

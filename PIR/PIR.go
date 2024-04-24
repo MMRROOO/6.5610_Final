@@ -1,22 +1,32 @@
-// package pir
+package pir
 
-// import (
-// 	"crypto/rand"
-// 	"math/big"
+var DBCOLLUMNS = 100 // sqrt of DB
+var DBROWS = 100     // sqrt of DB
 
-// 	"gonum.org/v1/gonum/mat"
-// )
+func Query(row int, collumn int, secret Matrix) encryption {
+	qu := MakeMatrix(DBCOLLUMNS, 1, 0)
 
-// var DB_SIZE = 100 // sqrt of DB values
-// func nrand() int64 {
-// 	max := big.NewInt(int64(1) << 62)
-// 	bigx, _ := rand.Int(rand.Reader, max)
-// 	x := bigx.Int64()
-// 	return x
-// }
+	qu.Set(collumn, 1, 1)
 
-// func Query(index int) {
-// 	key := nrand()
-// 	queryVector := mat.NewDense(1, DB_SIZE, nil)
+	e := ENC(secret, qu)
 
-// }
+	return e
+
+}
+
+func Ans(DB Matrix, qu encryption) Matrix {
+	quMatrix := MatrixFromEncryption(qu)
+	a := MakeMatrix(DB.Rows, quMatrix.Collumns, 0)
+	a.Mupltiply(DB, quMatrix)
+
+	return a
+}
+
+func Reonstruct(ans Matrix, secret Matrix) Matrix {
+
+	enc := EncryptionFromMatrix(ans)
+
+	v := DEC(secret, enc.A, enc.b)
+
+	return v
+}

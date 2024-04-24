@@ -1,3 +1,3 @@
-module gonum.org/v1/gonum
+module pir
 
 go 1.21.9
