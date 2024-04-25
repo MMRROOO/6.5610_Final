@@ -82,15 +82,15 @@ func (C *Matrix) Mupltiply(A Matrix, B Matrix) {
 
 	// C := Matrix{Data: make([]int, A.Rows*B.Collumns), Rows: A.Rows, Collumns: B.Collumns}
 
-	if A.Rows != B.Collumns || A.Collumns != C.Collumns || B.Rows != C.Rows {
+	if A.Collumns != B.Rows || A.Rows != C.Rows || B.Collumns != C.Collumns {
 		fmt.Printf("wrong Size Matrix, A rows, collumns: %d, %d, B rows collumns: %d, %d, C rows, collumns: %d, %d\n", A.Rows, A.Collumns, B.Rows, B.Collumns, C.Rows, C.Collumns)
 		return
 	}
 
 	for j := 0; j < A.Rows; j++ {
-		for i := 0; i < A.Collumns; i++ {
-			for c := 0; c < B.Collumns; c++ {
-				C.AddToIndex(j, i, A.Get(j, i)*B.Get(i, c))
+		for i := 0; i < B.Collumns; i++ {
+			for c := 0; c < A.Collumns; c++ {
+				C.AddToIndex(j, i, A.Get(j, c)*B.Get(c, i))
 			}
 		}
 	}
@@ -162,4 +162,34 @@ func (A *Matrix) MupltiplyToIndex(row int, collumn int, value int64) {
 func (A *Matrix) AddToIndex(row int, collumn int, value int64) {
 	fmt.Printf("%d, %d, %d, %d\n", row, collumn, A.Rows, A.Collumns)
 	A.Data[row*A.Collumns+collumn] = (A.Data[row*A.Collumns+collumn] + value) % A.q
+}
+
+func (A *Matrix) Print() {
+	for i := 0; i < A.Collumns; i++ {
+		fmt.Print("______")
+	}
+	fmt.Print("__")
+
+	for i := 0; i < A.Rows; i++ {
+		fmt.Print("\n|")
+		for j := 0; j < A.Collumns; j++ {
+			val := A.Get(i, j)
+			if val < 1000 {
+				fmt.Print(" ")
+			}
+			if val < 10 {
+				fmt.Print(" ")
+			}
+			fmt.Printf("%d", A.Get(i, j))
+			if val < 10000 {
+				fmt.Print(" ")
+			}
+			if val < 100 {
+				fmt.Print(" ")
+			}
+			fmt.Print("|")
+		}
+	}
+	fmt.Print("\n")
+
 }
