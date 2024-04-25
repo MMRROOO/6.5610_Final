@@ -1,4 +1,4 @@
-package pir
+package main
 
 var DBCOLLUMNS = 100 // sqrt of DB
 var DBROWS = 100     // sqrt of DB
