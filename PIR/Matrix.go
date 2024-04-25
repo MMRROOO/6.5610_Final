@@ -78,12 +78,12 @@ func MatrixFromEncryption(E encryption) Matrix {
 	return C
 }
 
-func (C *Matrix) Mupltiply(B Matrix, A Matrix) {
+func (C *Matrix) Mupltiply(A Matrix, B Matrix) {
 
 	// C := Matrix{Data: make([]int, A.Rows*B.Collumns), Rows: A.Rows, Collumns: B.Collumns}
 
-	if A.Collumns != B.Rows || A.Rows != C.Rows || B.Collumns != C.Collumns {
-		fmt.Printf("wrong Size Matrix")
+	if A.Rows != B.Collumns || A.Collumns != C.Collumns || B.Rows != C.Rows {
+		fmt.Printf("wrong Size Matrix, A rows, collumns: %d, %d, B rows collumns: %d, %d, C rows, collumns: %d, %d\n", A.Rows, A.Collumns, B.Rows, B.Collumns, C.Rows, C.Collumns)
 		return
 	}
 
@@ -98,7 +98,7 @@ func (C *Matrix) Mupltiply(B Matrix, A Matrix) {
 
 func (A *Matrix) Add(B Matrix) {
 	if A.Collumns != B.Collumns || A.Rows != B.Rows {
-		fmt.Printf("wrong Size Matrix")
+		fmt.Printf("wrong Size Matrix\n")
 		return
 	}
 	for i := 0; i < A.Rows; i++ {
@@ -109,7 +109,7 @@ func (A *Matrix) Add(B Matrix) {
 }
 func (A *Matrix) Subtract(B Matrix) {
 	if A.Collumns != B.Collumns || A.Rows != B.Rows {
-		fmt.Printf("wrong Size Matrix")
+		fmt.Printf("wrong Size Matrix\n")
 		return
 	}
 	for i := 0; i < A.Rows; i++ {
@@ -160,5 +160,6 @@ func (A *Matrix) MupltiplyToIndex(row int, collumn int, value int64) {
 	A.Data[row*A.Collumns+collumn] = (A.Data[row*A.Collumns+collumn] * value) % A.q
 }
 func (A *Matrix) AddToIndex(row int, collumn int, value int64) {
+	fmt.Printf("%d, %d, %d, %d\n", row, collumn, A.Rows, A.Collumns)
 	A.Data[row*A.Collumns+collumn] = (A.Data[row*A.Collumns+collumn] + value) % A.q
 }

@@ -14,10 +14,10 @@ type encryption struct {
 func ENC(secret Matrix, v Matrix) encryption {
 	A := MakeMatrix(M, N, 1)
 
-	b := MakeMatrix(1, N, 0)
+	b := MakeMatrix(M, 1, 0)
 
 	b.Mupltiply(A, secret)
-	b.AddError(q / 4)
+	b.AddError(q / 8)
 	v.ScalarMupltiply(q / 2)
 	b.Add((v))
 
@@ -41,14 +41,16 @@ func DEC(secret Matrix, A Matrix, b Matrix) Matrix {
 }
 
 func main() {
-	secret := MakeMatrix(1, N, 0)
+	secret := MakeMatrix(N, 1, 0)
 
-	v := MakeMatrix(1, N, 1)
+	v := MakeMatrix(N, 1, 1)
 	v.LWERound()
-
+	fmt.Print("before ENC\n")
 	enc := ENC(secret, v)
+	fmt.Print("after ENC\n")
 
 	dec := DEC(secret, enc.A, enc.b)
+	fmt.Print("after DEC\n")
 
 	fmt.Print(dec.Data[0])
 
