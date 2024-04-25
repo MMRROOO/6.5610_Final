@@ -1,9 +1,9 @@
 package main
 
-var DBCOLLUMNS = 100 // sqrt of DB
-var DBROWS = 100     // sqrt of DB
+var DBCOLLUMNS = 10 // sqrt of DB
+var DBROWS = 10     // sqrt of DB
 
-func Query(row int, collumn int, secret Matrix) encryption {
+func Query(collumn int, secret Matrix) encryption {
 	qu := MakeMatrix(DBCOLLUMNS, 1, 0)
 
 	qu.Set(collumn, 1, 1)
@@ -22,11 +22,25 @@ func Ans(DB Matrix, qu encryption) Matrix {
 	return a
 }
 
-func Reonstruct(ans Matrix, secret Matrix) Matrix {
+func Reconstruct(ans Matrix, secret Matrix) Matrix {
 
 	enc := EncryptionFromMatrix(ans)
 
 	v := DEC(secret, enc.A, enc.b)
 
 	return v
+}
+
+func main() {
+	secret := MakeMatrix(N, 1, 1)
+
+	DB := MakeMatrix(DBROWS, DBCOLLUMNS, 1)
+	DB.LWERound()
+
+	qu := Query(0, secret)
+	Ans := Ans(DB, qu)
+	out := Reconstruct(Ans, secret)
+
+	out.Print()
+	DB.Print()
 }

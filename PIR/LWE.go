@@ -1,7 +1,5 @@
 package main
 
-import "fmt"
-
 var M = 100
 var N = 10
 var q int64 = 65521
@@ -12,6 +10,8 @@ type encryption struct {
 }
 
 func ENC(secret Matrix, v Matrix) encryption {
+	M := v.Rows
+	N := secret.Rows
 	A := MakeMatrix(M, N, 1)
 
 	As := MakeMatrix(M, 1, 0)
@@ -29,7 +29,7 @@ func ENC(secret Matrix, v Matrix) encryption {
 }
 
 func DEC(secret Matrix, A Matrix, b Matrix) Matrix {
-	As := MakeMatrix(M, 1, 0)
+	As := MakeMatrix(A.Rows, 1, 0)
 	As.Mupltiply(A, secret)
 
 	c := Copy(b)
@@ -42,23 +42,24 @@ func DEC(secret Matrix, A Matrix, b Matrix) Matrix {
 
 }
 
-func main() {
-	secret := MakeMatrix(N, 1, 0)
+// func main() {
+// 	secret := MakeMatrix(N, 1, 1)
 
-	v := MakeMatrix(M, 1, 1)
-	v.LWERound()
-	fmt.Print("before ENC\n")
-	enc := ENC(secret, v)
-	fmt.Print("after ENC\n")
+// 	v := MakeMatrix(M, 1, 1)
+// 	v.LWERound()
+// 	fmt.Print("before ENC\n")
+// 	enc := ENC(secret, v)
+// 	fmt.Print("after ENC\n")
 
-	dec := DEC(secret, enc.A, enc.b)
-	fmt.Print("after DEC\n")
+// 	dec := DEC(secret, enc.A, enc.b)
+// 	fmt.Print("after DEC\n")
 
-	fmt.Print(dec.Data)
-	fmt.Print("\n")
-	fmt.Print(v.Data)
+// 	fmt.Print(dec.Data)
+// 	fmt.Print("\n")
+// 	fmt.Print(v.Data)
 
-	fmt.Print("\n")
-	enc.A.Print()
+// 	fmt.Print("\n")
+// 	enc.A.Print()
+// 	enc.b.Print()
 
-}
+// }

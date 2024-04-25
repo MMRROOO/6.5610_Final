@@ -114,7 +114,7 @@ func (A *Matrix) Subtract(B Matrix) {
 	}
 	for i := 0; i < A.Rows; i++ {
 		for j := 0; j < A.Collumns; j++ {
-			A.AddToIndex(i, j, -B.Get(i, j))
+			A.SubtractFromIndex(i, j, B.Get(i, j))
 		}
 	}
 }
@@ -160,8 +160,11 @@ func (A *Matrix) MupltiplyToIndex(row int, collumn int, value int64) {
 	A.Data[row*A.Collumns+collumn] = (A.Data[row*A.Collumns+collumn] * value) % A.q
 }
 func (A *Matrix) AddToIndex(row int, collumn int, value int64) {
-	fmt.Printf("%d, %d, %d, %d\n", row, collumn, A.Rows, A.Collumns)
 	A.Data[row*A.Collumns+collumn] = (A.Data[row*A.Collumns+collumn] + value) % A.q
+}
+
+func (A *Matrix) SubtractFromIndex(row int, collumn int, value int64) {
+	A.Data[row*A.Collumns+collumn] = (A.Data[row*A.Collumns+collumn] + (A.q - value)) % A.q
 }
 
 func (A *Matrix) Print() {
@@ -192,4 +195,14 @@ func (A *Matrix) Print() {
 	}
 	fmt.Print("\n")
 
+}
+
+func (A *Matrix) PrintCollumn(collumn int) {
+	C := MakeMatrix(A.Rows, 1, 0)
+
+	for i := 0; i < A.Rows; i++ {
+		C.Set(i, 0, A.Get(i, collumn))
+	}
+
+	C.Print()
 }
