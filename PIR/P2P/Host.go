@@ -17,7 +17,7 @@ func MakeHost(peers []*labrpc.ClientEnd, NFiles int, HashSize int, FileSize int)
 	H := new(Host)
 	H.Peers = peers
 	H.Data = MakeMatrix(FileSize/DATA_SIZE, NFiles, 0, q)
-	H.Hashes = MakeMatrix(HashSize/DATA_SIZE, NFiles, 0, q)
+	H.Hashes = MakeMatrix(32, NFiles, 0, q)
 	FillWithHashes(H.Hashes, H.Data)
 	return H
 }
@@ -31,7 +31,10 @@ func (H *Host) GetFile(args *GetFileArgs, reply *GetFileReply) {
 func FillWithHashes(Hash Matrix, Data Matrix) {
 	for c := 0; c < Data.Columns; c++ {
 		columnArray := Data.GetColumn(c)
-		Hash = sha256.Sum256([]byte(columnArray))
+		CHash := sha256.Sum256([]byte(columnArray))
+		for r := 0; r < Hash.Rows; r++ {
+			Hash.Set(r, c, CHash[r])
+		}
 	}
 }
 
