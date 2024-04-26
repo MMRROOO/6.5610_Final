@@ -23,12 +23,12 @@ func nrand() int64 {
 // Mtypes:
 // 0 = Zero Matrix
 // 1 = Random Matrix
-func MakeMatrix(Rows int, Columns int, MType int) Matrix {
+func MakeMatrix(Rows int, Columns int, MType int, q int64) Matrix {
 
 	if MType == 0 {
-		return Matrix{Data: make([]int64, Rows*Columns), Rows: Rows, Columns: Columns, q: 62251}
+		return Matrix{Data: make([]int64, Rows*Columns), Rows: Rows, Columns: Columns, q: q}
 	} else if MType == 1 {
-		M := Matrix{Data: make([]int64, Rows*Columns), Rows: Rows, Columns: Columns, q: 62251}
+		M := Matrix{Data: make([]int64, Rows*Columns), Rows: Rows, Columns: Columns, q: q}
 		for i := 0; i < M.Rows; i++ {
 			for j := 0; j < M.Columns; j++ {
 				M.Set(i, j, nrand()%M.q)
@@ -47,14 +47,14 @@ func Copy(A Matrix) Matrix {
 }
 
 func EncryptionFromMatrix(Ans Matrix) encryption {
-	A := MakeMatrix(Ans.Rows, Ans.Columns-1, 0)
+	A := MakeMatrix(Ans.Rows, Ans.Columns-1, 0, Ans.q)
 
 	for i := 0; i < Ans.Rows; i++ {
 		for j := 0; j < Ans.Columns-1; j++ {
 			A.Set(i, j, Ans.Get(i, j))
 		}
 	}
-	b := MakeMatrix(Ans.Rows, 1, 0)
+	b := MakeMatrix(Ans.Rows, 1, 0, Ans.q)
 	for i := 0; i < Ans.Rows; i++ {
 		b.Set(i, 0, Ans.Get(i, Ans.Columns-1))
 	}
@@ -123,20 +123,7 @@ func (A *Matrix) Subtract(B Matrix) {
 func (A *Matrix) AddError(max_error int64) {
 	for i := 0; i < A.Rows; i++ {
 		for j := 0; j < A.Columns; j++ {
-			A.AddToIndex(i, j, nrand()%int64(max_error))
-		}
-	}
-}
-
-func (A *Matrix) LWERound() {
-	for i := 0; i < A.Rows; i++ {
-		for j := 0; j < A.Columns; j++ {
-			val := A.Get(i, j)
-			if val < A.q/4 || val > 3*A.q/4 {
-				A.Set(i, j, 0)
-			} else {
-				A.Set(i, j, 1)
-			}
+			A.AddToIndex(i, j, nrand()%int64(max_error)-(int64(max_error)/2))
 		}
 	}
 }
@@ -198,8 +185,15 @@ func (A *Matrix) Print() {
 
 }
 
+func (A *Matrix) GetColumn(collumn int) []int {
+	C := Make([]int, A.Rows)
+	for i := 0; i < A.Rows; i++ {
+		C[i] = A.Get(i, column)
+	}
+	return C
+}
 func (A *Matrix) PrintColumn(column int) {
-	C := MakeMatrix(A.Rows, 1, 0)
+	C := MakeMatrix(A.Rows, 1, 0, A.q)
 
 	for i := 0; i < A.Rows; i++ {
 		C.Set(i, 0, A.Get(i, column))

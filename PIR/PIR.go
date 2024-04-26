@@ -4,7 +4,7 @@ var DBCOLUMNS = 256 // sqrt of DB
 var DBROWS = 256    // sqrt of DB
 
 func Query(column int, secret Matrix) encryption {
-	qu := MakeMatrix(DBCOLUMNS, 1, 0)
+	qu := MakeMatrix(DBCOLUMNS, 1, 0, q)
 
 	qu.Set(column, 0, 1)
 
@@ -16,7 +16,7 @@ func Query(column int, secret Matrix) encryption {
 
 func Ans(DB Matrix, qu encryption) Matrix {
 	quMatrix := MatrixFromEncryption(qu)
-	a := MakeMatrix(DB.Rows, quMatrix.Columns, 0)
+	a := MakeMatrix(DB.Rows, quMatrix.Columns, 0, q)
 	a.Mupltiply(DB, quMatrix)
 
 	return a
@@ -33,9 +33,9 @@ func Reconstruct(ans Matrix, secret Matrix) Matrix {
 }
 
 func main() {
-	secret := MakeMatrix(N, 1, 1)
+	secret := MakeMatrix(N, 1, 1, q)
 
-	DB := MakeMatrix(DBROWS, DBCOLUMNS, 1)
+	DB := MakeMatrix(DBROWS, DBCOLUMNS, 1, q)
 	DB.LWERound()
 
 	qu := Query(0, secret)
