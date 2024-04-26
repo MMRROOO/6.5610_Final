@@ -2,7 +2,8 @@ package main
 
 var M = 100
 var N = 10
-var q int64 = 65521
+var q int64 = 2147483647
+var DATA_SIZE int64 = 256
 
 type encryption struct {
 	A Matrix
@@ -12,15 +13,15 @@ type encryption struct {
 func ENC(secret Matrix, v Matrix) encryption {
 	M := v.Rows
 	N := secret.Rows
-	A := MakeMatrix(M, N, 1)
+	A := MakeMatrix(M, N, 1, q)
 
-	As := MakeMatrix(M, 1, 0)
+	As := MakeMatrix(M, 1, 0, q)
 
 	v_copy := Copy(v)
 
 	As.Mupltiply(A, secret)
-	As.AddError(5)
-	v_copy.ScalarMupltiply(q / 2) //change this to fix aliasing issue
+	As.AddError(4)
+	v_copy.ScalarMupltiply(q / DATA_SIZE) //change this to fix aliasing issue
 	As.Add((v_copy))
 
 	retval := encryption{A: A, b: As}
@@ -29,7 +30,7 @@ func ENC(secret Matrix, v Matrix) encryption {
 }
 
 func DEC(secret Matrix, A Matrix, b Matrix) Matrix {
-	As := MakeMatrix(A.Rows, 1, 0)
+	As := MakeMatrix(A.Rows, 1, 0, q)
 	As.Mupltiply(A, secret)
 
 	c := Copy(b)
@@ -40,6 +41,18 @@ func DEC(secret Matrix, A Matrix, b Matrix) Matrix {
 
 	return c
 
+}
+
+func (A *Matrix) LWERound() {
+	for i := 0; i < A.Rows; i++ {
+		for j := 0; j < A.Columns; j++ {
+
+			val := A.Get(i, j)
+			roundedVal := (((val + (q/(DATA_SIZE))/2) / (q / DATA_SIZE)) % A.q) % (DATA_SIZE)
+
+			A.Set(i, j, roundedVal)
+		}
+	}
 }
 
 // func main() {
