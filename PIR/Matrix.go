@@ -185,8 +185,8 @@ func (A *Matrix) Print() {
 
 }
 
-func (A *Matrix) GetColumn(collumn int) []int {
-	C := Make([]int, A.Rows)
+func (A *Matrix) GetColumn(column int) []int {
+	C := make([]int, A.Rows)
 	for i := 0; i < A.Rows; i++ {
 		C[i] = A.Get(i, column)
 	}
