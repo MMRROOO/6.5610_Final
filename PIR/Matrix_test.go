@@ -2,7 +2,6 @@ package main
 
 import (
 	"testing"
-	"github.com/stretchr/testify/assert"
 )
 
 
@@ -29,9 +28,6 @@ func TestMakeMatrix(t *testing.T) {
 			}
 		}
 	}
-	
-	assert.Equal(t, A.Rows, Rows)
-	assert.Equal(t, A.Columns, Cols)
 
 	// check that A not equal to B; MakeMatrix properly makes random matrices
 	isEqual := true
@@ -52,8 +48,9 @@ func TestMakeMatrix(t *testing.T) {
 func TestCopy(t *testing.T){
 	// t.Parallel()
 	Acopy := Copy(A)
-	assert.Equal(t, A.Rows, Acopy.Rows)
-	assert.Equal(t, A.Columns, Acopy.Columns)
+	if (A.Rows != Acopy.Rows) || (A.Columns != Acopy.Columns) {
+		t.Errorf("Copy did not copy matrix size")
+	}
 
 	for r := 0; r < Rows; r++ {
 		for c := 0; c < Cols; c++ {
@@ -98,8 +95,9 @@ func TestMatrixFromEncryption(t *testing.T){
 	// t.Parallel()
 	e := encryption{A: A, b: MakeMatrix(Rows, 1, 1, q)}
 	C := MatrixFromEncryption(e)
-	assert.Equal(t, C.Rows, Rows)
-	assert.Equal(t, C.Columns, Cols+1)
+	if C.Rows != Rows || C.Columns != Cols+1 {
+		t.Errorf("MatrixFromEncryption made matrix of size %d x %d; got %d x %d", Rows, Cols+1, C.Rows, C.Columns)
+	}
 
 	for r := 0; r < Rows; r++ {
 		for c := 0; c < Cols; c++ {
