@@ -1,6 +1,7 @@
-package main
+package p2p
 
 import (
+	"crypto/sha256"
 	"sync"
 )
 
@@ -11,6 +12,7 @@ type Peer struct {
 	me         int
 	Data       Matrix
 	secret     Matrix
+	Hashes     [][32]byte
 	Host       *labrpc.ClientEnd
 }
 
@@ -25,7 +27,7 @@ type PIRReply struct {
 func MakePeer(peers []*labrpc.ClientEnd, me int, knownPeers []int, Host *labrpc.ClientEnd) *Peer {
 	P := new(Peer)
 	P.peers = peers
-	P.me = metrics
+	P.me = me
 	P.Data = MakeMatrix(256, 256, 0, q)
 	P.secret = MakeMatrix(256, 1, 1, q)
 	P.knownPeers = knownPeers
@@ -91,6 +93,13 @@ func (P *Peers) GetFile(server int, index int) []int {
 	}
 
 	return FileFromMatrixes(fileMatrixes)
+}
+
+func CheckHash(File Matrix, Hash [32]byte) bool {
+	columnArray := File.GetColumn(0)
+	CHash := sha256.Sum256([]byte(columnArray))
+
+	return CHash == Hash
 }
 
 func (P *Peer) PIRAns(args *PIRArgs, reply *PIRReply) {
