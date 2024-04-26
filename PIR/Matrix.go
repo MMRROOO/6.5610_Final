@@ -188,7 +188,7 @@ func (A *Matrix) Print() {
 func (A *Matrix) GetColumn(column int) []int {
 	C := make([]int, A.Rows)
 	for i := 0; i < A.Rows; i++ {
-		C[i] = A.Get(i, column)
+		C[i] = int(A.Get(i, column))
 	}
 	return C
 }
