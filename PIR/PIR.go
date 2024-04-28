@@ -1,9 +1,14 @@
 package main
 
+import (
+	"fmt"
+)
+
 var DBCOLUMNS = 256 // sqrt of DB
 var DBROWS = 256    // sqrt of DB
+var SMALLN = 16     // sqrt of DB
 
-var MAX_ERROR int64 = 5
+var MAX_ERROR int64 = 10
 
 func Query(column int, secret Matrix) encryption {
 	qu := MakeMatrix(DBCOLUMNS, 1, 0, q)
@@ -19,7 +24,7 @@ func Query(column int, secret Matrix) encryption {
 func Ans(DB Matrix, qu encryption) Matrix {
 	quMatrix := MatrixFromEncryption(qu)
 	a := MakeMatrix(DB.Rows, quMatrix.Columns, 0, q)
-	a.Mupltiply(DB, quMatrix)
+	a.Multiply(DB, quMatrix)
 
 	return a
 }
@@ -27,25 +32,22 @@ func Ans(DB Matrix, qu encryption) Matrix {
 func Reconstruct(ans Matrix, secret Matrix) Matrix {
 
 	enc := EncryptionFromMatrix(ans)
-	ans.Print()
-	enc.b.Print()
+
 	v := DEC(secret, enc.A, enc.b)
 
 	return v
 }
 
-func main() {
-	secret := MakeMatrix(N, 1, 1, q)
+func DoubleSetup(DB Matrix, A1 Matrix, A2 Matrix) (HintS Matrix, HintC Matrix) {
+	A1xDB := MakeMatrix(A1.Columns, DB.Rows, 0, q)
 
-	DB := MakeMatrix(DBROWS, DBCOLUMNS, 1, q)
-	DB.LWERound()
+	A1xDB.Multiply(A1.Transpose(), DB.Transpose())
 
-	qu := Query(0, secret)
-	Ans := Ans(DB, qu)
-	out := Reconstruct(Ans, secret)
+	HintS = Decompose(A1xDB)
+	HintC = MakeMatrix(HintS.Rows, A2.Columns, 0, q)
+	HintC.Multiply(HintS, A2)
 
-	out.Print()
-	DB.PrintColumn(0)
+	return HintS, HintC
 }
 
 type Dqu struct {
@@ -92,10 +94,10 @@ func DoubleAns(DB Matrix, HintS Matrix, qu Dqu, A2 Matrix) Dans {
 
 	H.Multiply(ans1, A2)
 
-	ansH := MakeMatrix(HintS.Rows, 1, 9, q)
+	ansH := MakeMatrix(HintS.Rows, 1, 0, q)
 	ansH.Multiply(HintS, c2)
 
-	ans2 := MakeMatrix(1, 1, 0, q)
+	ans2 := MakeMatrix(logQ_logP, 1, 0, q)
 
 	ans2.Multiply(ans1, c2)
 
@@ -105,16 +107,64 @@ func DoubleAns(DB Matrix, HintS Matrix, qu Dqu, A2 Matrix) Dans {
 func DoubleReconstruct(secret1 Matrix, secret2 Matrix, HintC Matrix, ans Dans) int64 {
 
 	HintC_H := JoinVertical(HintC, ans.H)
+	tmp := MakeMatrix(HintC_H.Rows, secret1.Columns, 0, q)
+	tmp.Multiply(HintC_H, secret2)
 	AnsH_Ans2 := JoinVertical(ans.AnsH, ans.Ans2)
 
-	AnsH_Ans2.Subtract(HintC_H)
+	AnsH_Ans2.Subtract(tmp)
 	AnsH_Ans2.LWERound()
 	H1_a1 := Compose(AnsH_Ans2)
 	H1, a1 := SplitVertical(H1_a1)
 	retval := MakeMatrix(1, 1, 0, q)
 	retval.Multiply(secret1.Transpose(), H1)
 	a1.Subtract(retval)
-
+	a1.LWERound()
 	return a1.Get(0, 0)
 
+}
+
+func main() {
+	//square root pir
+	// secret := MakeMatrix(N, 1, 1, q)
+
+	// DB := MakeMatrix(DBROWS, DBCOLUMNS, 1, q)
+	// DB.LWERound()
+
+	// qu := Query(0, secret)
+	// Ans := Ans(DB, qu)
+	// out := Reconstruct(Ans, secret)
+
+	// out.Print()
+	// DB.PrintColumn(0)
+
+	//DoublePIR
+
+	DB := MakeMatrix(DBROWS, DBCOLUMNS, 1, q)
+	DB.LWERound()
+
+	A1 := MakeMatrix(DBROWS, SMALLN, 1, q)
+	A2 := MakeMatrix(DBCOLUMNS, SMALLN, 1, q)
+
+	Secret1 := MakeMatrix(SMALLN, 1, 1, q)
+	Secret2 := MakeMatrix(SMALLN, 1, 1, q)
+
+	HintS, HintC := DoubleSetup(DB, A1, A2)
+
+	fmt.Print("After Setup\n")
+	row, col := 100, 18
+
+	qu := DoubleQuery(row, col, Secret1, Secret2, A1, A2)
+
+	fmt.Print("After Query\n")
+
+	Ans := DoubleAns(DB, HintS, qu, A2)
+
+	fmt.Print("After Ans\n")
+
+	val := DoubleReconstruct(Secret1, Secret2, HintC, Ans)
+
+	fmt.Print("After Reconstruct\n")
+
+	fmt.Print(val, DB.Get(row, col))
+	// DB.Print()
 }

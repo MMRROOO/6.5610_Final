@@ -1,9 +1,13 @@
 package main
 
+import "math"
+
 var M = 100
 var N = 10
 var q int64 = 2147483647
 var DATA_SIZE int64 = 256
+
+var logQ_logP = int((math.Log(float64(q)))/math.Log(float64(DATA_SIZE))) + 1
 
 type encryption struct {
 	A Matrix
@@ -19,9 +23,9 @@ func ENC(secret Matrix, v Matrix) encryption {
 
 	v_copy := Copy(v)
 
-	As.Mupltiply(A, secret)
+	As.Multiply(A, secret)
 	As.AddError(4)
-	v_copy.ScalarMupltiply(q / DATA_SIZE) //change this to fix aliasing issue
+	v_copy.ScalarMultiply(q / DATA_SIZE) //change this to fix aliasing issue
 	As.Add((v_copy))
 
 	retval := encryption{A: A, b: As}
@@ -31,7 +35,7 @@ func ENC(secret Matrix, v Matrix) encryption {
 
 func DEC(secret Matrix, A Matrix, b Matrix) Matrix {
 	As := MakeMatrix(A.Rows, 1, 0, q)
-	As.Mupltiply(A, secret)
+	As.Multiply(A, secret)
 
 	c := Copy(b)
 

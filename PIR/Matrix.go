@@ -205,14 +205,15 @@ func (A *Matrix) PrintColumn(column int) {
 
 // each column of length k stores one value from original matrix
 func Decompose(A Matrix) Matrix {
-	DecompSize := (int(math.Log(float64(q))) / int(math.Log(float64(DATA_SIZE))))
-	B := MakeMatrix(A.Rows*DecompSize, A.Columns, 0, q)
+	DecompSize := logQ_logP
+	B := MakeMatrix(A.Rows*DecompSize, A.Columns, 0, A.q)
 
 	for r := 0; r < A.Rows; r++ {
 		for c := 0; c < A.Columns; c++ {
 			for k := 0; k < DecompSize; k++ {
-				DecompVal := (A.Get(r, c) % (DATA_SIZE ^ int64(k+1))) / (DATA_SIZE ^ int64(k))
+				DecompVal := (A.Get(r, c) % (int64(math.Pow(float64(DATA_SIZE), float64(k+1))))) / (int64(math.Pow(float64(DATA_SIZE), float64(k))))
 				B.Set(r*DecompSize+k, c, DecompVal)
+
 			}
 		}
 	}
@@ -220,14 +221,13 @@ func Decompose(A Matrix) Matrix {
 }
 
 func Compose(A Matrix) Matrix {
-	DecompSize := (int(math.Log(float64(q))) / int(math.Log(float64(DATA_SIZE))))
-	B := MakeMatrix(A.Rows/DecompSize, A.Columns, 0, q)
+	DecompSize := logQ_logP
+	B := MakeMatrix(A.Rows/DecompSize, A.Columns, 0, A.q)
 
 	for r := 0; r < B.Rows; r++ {
 		for c := 0; c < B.Columns; c++ {
 			for k := 0; k < DecompSize; k++ {
-				CompVal := (A.Get(r*DecompSize+k, c) * (DATA_SIZE ^ int64(k)))
-
+				CompVal := (A.Get(r*DecompSize+k, c) * (int64(math.Pow(float64(DATA_SIZE), float64(k)))))
 				B.AddToIndex(r, c, CompVal)
 			}
 		}
@@ -236,7 +236,7 @@ func Compose(A Matrix) Matrix {
 }
 
 func (A *Matrix) Transpose() Matrix {
-	T := MakeMatrix(A.Columns, A.Rows, 0, q)
+	T := MakeMatrix(A.Columns, A.Rows, 0, A.q)
 	for r := 0; r < A.Rows; r++ {
 		for c := 0; c < A.Columns; c++ {
 			T.Set(c, r, A.Get(r, c))
@@ -248,7 +248,7 @@ func (A *Matrix) Transpose() Matrix {
 func JoinVertical(A Matrix, B Matrix) Matrix {
 	if A.Columns != B.Columns {
 		fmt.Print("Different number of columns")
-		return MakeMatrix(0, 0, 0, q)
+		return MakeMatrix(0, 0, 0, A.q)
 	}
 	J := MakeMatrix(A.Rows+B.Rows, A.Columns, 0, q)
 	for r := 0; r < A.Rows+B.Rows; r++ {
@@ -264,8 +264,8 @@ func JoinVertical(A Matrix, B Matrix) Matrix {
 }
 
 func SplitVertical(A Matrix) (Matrix, Matrix) {
-	T := MakeMatrix(A.Rows-1, A.Columns, 0, q)
-	B := MakeMatrix(1, A.Columns, 0, q)
+	T := MakeMatrix(A.Rows-1, A.Columns, 0, A.q)
+	B := MakeMatrix(1, A.Columns, 0, A.q)
 	T.Data = A.Data[0 : A.Columns*(A.Rows-1)]
 	B.Data = A.Data[A.Columns*(A.Rows-1) : A.Columns*(A.Rows)]
 
