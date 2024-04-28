@@ -3,6 +3,7 @@ package main
 import (
 	"crypto/rand"
 	"fmt"
+	"math"
 	"math/big"
 )
 
@@ -79,7 +80,7 @@ func MatrixFromEncryption(E encryption) Matrix {
 	return C
 }
 
-func (C *Matrix) Mupltiply(A Matrix, B Matrix) {
+func (C *Matrix) Multiply(A Matrix, B Matrix) {
 
 	// C := Matrix{Data: make([]int, A.Rows*B.Columns), Rows: A.Rows, Columns: B.Columns}
 
@@ -128,10 +129,10 @@ func (A *Matrix) AddError(max_error int64) {
 	}
 }
 
-func (A *Matrix) ScalarMupltiply(value int64) {
+func (A *Matrix) ScalarMultiply(value int64) {
 	for j := 0; j < A.Rows; j++ {
 		for i := 0; i < A.Columns; i++ {
-			A.MupltiplyToIndex(j, i, value)
+			A.MultiplyToIndex(j, i, value)
 		}
 	}
 }
@@ -144,7 +145,7 @@ func (A *Matrix) Set(row int, column int, value int64) {
 	A.Data[row*A.Columns+column] = value % A.q
 }
 
-func (A *Matrix) MupltiplyToIndex(row int, column int, value int64) {
+func (A *Matrix) MultiplyToIndex(row int, column int, value int64) {
 	A.Data[row*A.Columns+column] = (A.Data[row*A.Columns+column] * value) % A.q
 }
 func (A *Matrix) AddToIndex(row int, column int, value int64) {
@@ -200,4 +201,73 @@ func (A *Matrix) PrintColumn(column int) {
 	}
 
 	C.Print()
+}
+
+// each column of length k stores one value from original matrix
+func Decompose(A Matrix) Matrix {
+	DecompSize := (int(math.Log(float64(q))) / int(math.Log(float64(DATA_SIZE))))
+	B := MakeMatrix(A.Rows*DecompSize, A.Columns, 0, q)
+
+	for r := 0; r < A.Rows; r++ {
+		for c := 0; c < A.Columns; c++ {
+			for k := 0; k < DecompSize; k++ {
+				DecompVal := (A.Get(r, c) % (DATA_SIZE ^ int64(k+1))) / (DATA_SIZE ^ int64(k))
+				B.Set(r*DecompSize+k, c, DecompVal)
+			}
+		}
+	}
+	return B
+}
+
+func Compose(A Matrix) Matrix {
+	DecompSize := (int(math.Log(float64(q))) / int(math.Log(float64(DATA_SIZE))))
+	B := MakeMatrix(A.Rows/DecompSize, A.Columns, 0, q)
+
+	for r := 0; r < B.Rows; r++ {
+		for c := 0; c < B.Columns; c++ {
+			for k := 0; k < DecompSize; k++ {
+				CompVal := (A.Get(r*DecompSize+k, c) * (DATA_SIZE ^ int64(k)))
+
+				B.AddToIndex(r, c, CompVal)
+			}
+		}
+	}
+	return B
+}
+
+func (A *Matrix) Transpose() Matrix {
+	T := MakeMatrix(A.Columns, A.Rows, 0, q)
+	for r := 0; r < A.Rows; r++ {
+		for c := 0; c < A.Columns; c++ {
+			T.Set(c, r, A.Get(r, c))
+		}
+	}
+	return T
+}
+
+func JoinVertical(A Matrix, B Matrix) Matrix {
+	if A.Columns != B.Columns {
+		fmt.Print("Different number of columns")
+		return MakeMatrix(0, 0, 0, q)
+	}
+	J := MakeMatrix(A.Rows+B.Rows, A.Columns, 0, q)
+	for r := 0; r < A.Rows+B.Rows; r++ {
+		for c := 0; c < A.Columns; c++ {
+			if r < A.Rows {
+				J.Set(r, c, A.Get(r, c))
+			} else {
+				J.Set(r, c, B.Get(r-A.Rows, c))
+			}
+		}
+	}
+	return J
+}
+
+func SplitVertical(A Matrix) (Matrix, Matrix) {
+	T := MakeMatrix(A.Rows-1, A.Columns, 0, q)
+	B := MakeMatrix(1, A.Columns, 0, q)
+	T.Data = A.Data[0 : A.Columns*(A.Rows-1)]
+	B.Data = A.Data[A.Columns*(A.Rows-1) : A.Columns*(A.Rows)]
+
+	return T, B
 }
