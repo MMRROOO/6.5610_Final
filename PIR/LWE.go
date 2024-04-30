@@ -11,7 +11,7 @@ var logQ_logP = int((math.Log(float64(q)))/math.Log(float64(DATA_SIZE))) + 1
 
 type encryption struct {
 	A Matrix
-	b Matrix
+	b Matrix //testing
 }
 
 func ENC(secret Matrix, v Matrix) encryption {
