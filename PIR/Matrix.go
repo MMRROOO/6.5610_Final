@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"math"
 	"math/big"
+	insecure_rand "math/rand" // Not cryptographically secure change back at some point
+	"time"
 )
 
 type Matrix struct {
@@ -14,11 +16,21 @@ type Matrix struct {
 	q       int64
 }
 
-func nrand() int64 {
+func nrand() int64 { //secure implementation
 	max := big.NewInt(int64(1) << 62)
 	bigx, _ := rand.Int(rand.Reader, max)
 	x := bigx.Int64()
 	return x
+}
+
+func insecure_nrand(seed int64) int64 { //unsecure for testing only
+	insecure_rand.Seed(seed) // Seed the default Source in the math/rand package
+
+	max_val := big.NewInt(1)           // Create a big.Int
+	max_val = max_val.Lsh(max_val, 62) // Left shift to get 2^62
+
+	// Generate a random *big.Int in range [0, max_val)
+	return insecure_rand.New(insecure_rand.NewSource(time.Now().UnixNano())).Int63n(max_val.Int64())
 }
 
 // Mtypes:
@@ -26,13 +38,15 @@ func nrand() int64 {
 // 1 = Random Matrix
 func MakeMatrix(Rows int, Columns int, MType int, q int64) Matrix {
 
+	seed := 1079
+
 	if MType == 0 {
 		return Matrix{Data: make([]int64, Rows*Columns), Rows: Rows, Columns: Columns, q: q}
 	} else if MType == 1 {
 		M := Matrix{Data: make([]int64, Rows*Columns), Rows: Rows, Columns: Columns, q: q}
 		for i := 0; i < M.Rows; i++ {
 			for j := 0; j < M.Columns; j++ {
-				M.Set(i, j, nrand()%M.q)
+				M.Set(i, j, insecure_nrand(int64(seed)%M.q))
 			}
 		}
 		return M
