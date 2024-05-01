@@ -1,6 +1,7 @@
-package main
+package lwe
 
 import "math"
+import matrix "pir/PIR/Matrix"
 
 var M = 100
 var N = 10
@@ -9,35 +10,35 @@ var DATA_SIZE int64 = 256
 
 var logQ_logP = int((math.Log(float64(q)))/math.Log(float64(DATA_SIZE))) + 1
 
-type encryption struct {
-	A Matrix
-	b Matrix //testing
+type Encryption struct {
+	A matrix.Matrix
+	B matrix.Matrix //testing
 }
 
-func ENC(secret Matrix, v Matrix) encryption {
+func ENC(secret matrix.Matrix, v matrix.Matrix) Encryption {
 	M := v.Rows
 	N := secret.Rows
-	A := MakeMatrix(M, N, 1, q)
+	A := matrix.MakeMatrix(M, N, 1, q)
 
-	As := MakeMatrix(M, 1, 0, q)
+	As := matrix.MakeMatrix(M, 1, 0, q)
 
-	v_copy := Copy(v)
+	v_copy := matrix.Copy(v)
 
 	As.Multiply(A, secret)
 	As.AddError(4)
 	v_copy.ScalarMultiply(q / DATA_SIZE) //change this to fix aliasing issue
 	As.Add((v_copy))
 
-	retval := encryption{A: A, b: As}
+	retval := Encryption{A: A, B: As}
 	return retval
 
 }
 
-func DEC(secret Matrix, A Matrix, b Matrix) Matrix {
-	As := MakeMatrix(A.Rows, 1, 0, q)
+func DEC(secret matrix.Matrix, A matrix.Matrix, b matrix.Matrix) matrix.Matrix {
+	As := matrix.MakeMatrix(A.Rows, 1, 0, q)
 	As.Multiply(A, secret)
 
-	c := Copy(b)
+	c := matrix.Copy(b)
 
 	c.Subtract(As)
 
@@ -45,18 +46,6 @@ func DEC(secret Matrix, A Matrix, b Matrix) Matrix {
 
 	return c
 
-}
-
-func (A *Matrix) LWERound() {
-	for i := 0; i < A.Rows; i++ {
-		for j := 0; j < A.Columns; j++ {
-
-			val := A.Get(i, j)
-			roundedVal := (((val + (q/(DATA_SIZE))/2) / (q / DATA_SIZE)) % A.q) % (DATA_SIZE)
-
-			A.Set(i, j, roundedVal)
-		}
-	}
 }
 
 // func main() {

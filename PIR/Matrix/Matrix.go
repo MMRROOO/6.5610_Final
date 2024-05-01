@@ -1,4 +1,4 @@
-package main
+package matrix
 
 import (
 	"crypto/rand"
@@ -9,12 +9,22 @@ import (
 	"time"
 )
 
+var DATA_SIZE int64 = 256
+var q int64 = 2147483647
+
 type Matrix struct {
 	Data    []int64
 	Rows    int
 	Columns int
 	q       int64
 }
+
+type Encryption struct {
+	A Matrix
+	B Matrix //testing
+}
+
+var logQ_logP = int((math.Log(float64(q)))/math.Log(float64(DATA_SIZE))) + 1
 
 func nrand() int64 { //secure implementation
 	max := big.NewInt(int64(1) << 62)
@@ -61,7 +71,7 @@ func Copy(A Matrix) Matrix {
 	return C
 }
 
-func EncryptionFromMatrix(Ans Matrix) encryption {
+func EncryptionFromMatrix(Ans Matrix) Encryption {
 	A := MakeMatrix(Ans.Rows, Ans.Columns-1, 0, Ans.q)
 
 	for i := 0; i < Ans.Rows; i++ {
@@ -74,17 +84,17 @@ func EncryptionFromMatrix(Ans Matrix) encryption {
 		b.Set(i, 0, Ans.Get(i, Ans.Columns-1))
 	}
 
-	return encryption{A: A, b: b}
+	return Encryption{A: A, B: b}
 
 }
 
-func MatrixFromEncryption(E encryption) Matrix {
+func MatrixFromEncryption(E Encryption) Matrix {
 
 	C := Matrix{Data: make([]int64, E.A.Rows*(E.A.Columns+1)), Rows: E.A.Rows, Columns: E.A.Columns + 1, q: E.A.q}
 	for i := 0; i < E.A.Rows; i++ {
 		for j := 0; j < (E.A.Columns + 1); j++ {
 			if j == E.A.Columns {
-				C.Data[i*(E.A.Columns+1)+j] = E.b.Get(i, 0)
+				C.Data[i*(E.A.Columns+1)+j] = E.B.Get(i, 0)
 			} else {
 				C.Data[i*(E.A.Columns+1)+j] = E.A.Get(i, j)
 			}
@@ -284,4 +294,16 @@ func SplitVertical(A Matrix) (Matrix, Matrix) {
 	B.Data = A.Data[A.Columns*(A.Rows-1) : A.Columns*(A.Rows)]
 
 	return T, B
+}
+
+func (A *Matrix) LWERound() {
+	for i := 0; i < A.Rows; i++ {
+		for j := 0; j < A.Columns; j++ {
+
+			val := A.Get(i, j)
+			roundedVal := (((val + (q/(DATA_SIZE))/2) / (q / DATA_SIZE)) % A.q) % (DATA_SIZE)
+
+			A.Set(i, j, roundedVal)
+		}
+	}
 }

@@ -1,25 +1,27 @@
 package main
 
 import (
+	lwe "pir/PIR/LWE"
+	matrix "pir/PIR/Matrix"
 	"testing"
 )
-
 
 var Rows = 30
 var Cols = 40
 
 // zero matrix
-var Z = MakeMatrix(Rows, Cols, 0, q)
+var Z = matrix.MakeMatrix(Rows, Cols, 0, q)
 
 // random matrix
-var A = MakeMatrix(Rows, Cols, 1, q)
-var B = MakeMatrix(Rows, Cols, 1, q)
+var A = matrix.MakeMatrix(Rows, Cols, 1, q)
+var B = matrix.MakeMatrix(Rows, Cols, 1, q)
+
 func TestMakeMatrix(t *testing.T) {
 	// t.Parallel()
 	if Z.Rows != Rows || Z.Columns != Cols {
 		t.Errorf("MakeMatrix made a matrix of size %d x %d; got %d x %d", Rows, Cols, Z.Rows, Z.Columns)
 	}
-	
+
 	// check that all elements are zero
 	for r := 0; r < Rows; r++ {
 		for c := 0; c < Cols; c++ {
@@ -45,9 +47,9 @@ func TestMakeMatrix(t *testing.T) {
 
 }
 
-func TestCopy(t *testing.T){
+func TestCopy(t *testing.T) {
 	// t.Parallel()
-	Acopy := Copy(A)
+	Acopy := matrix.Copy(A)
 	if (A.Rows != Acopy.Rows) || (A.Columns != Acopy.Columns) {
 		t.Errorf("Copy did not copy matrix size")
 	}
@@ -61,12 +63,12 @@ func TestCopy(t *testing.T){
 	}
 }
 
-func TestEncryptionFromMatrix(t *testing.T){
+func TestEncryptionFromMatrix(t *testing.T) {
 	// t.Parallel()
-	Ans := MakeMatrix(Rows, Cols, 1, q)
-	encryption := EncryptionFromMatrix(Ans)
+	Ans := matrix.MakeMatrix(Rows, Cols, 1, q)
+	encryption := matrix.EncryptionFromMatrix(Ans)
 	eA := encryption.A
-	eb := encryption.b
+	eb := encryption.B
 
 	if eA.Rows != Rows || eA.Columns != Cols-1 {
 		t.Errorf("EncryptionFromMatrix made A matrix of size %d x %d; got %d x %d", Rows, Cols-1, eA.Rows, eA.Columns)
@@ -91,10 +93,10 @@ func TestEncryptionFromMatrix(t *testing.T){
 	}
 }
 
-func TestMatrixFromEncryption(t *testing.T){
+func TestMatrixFromEncryption(t *testing.T) {
 	// t.Parallel()
-	e := encryption{A: A, b: MakeMatrix(Rows, 1, 1, q)}
-	C := MatrixFromEncryption(e)
+	e := lwe.Encryption{A: A, B: matrix.MakeMatrix(Rows, 1, 1, q)}
+	C := matrix.MatrixFromEncryption(e)
 	if C.Rows != Rows || C.Columns != Cols+1 {
 		t.Errorf("MatrixFromEncryption made matrix of size %d x %d; got %d x %d", Rows, Cols+1, C.Rows, C.Columns)
 	}
@@ -102,7 +104,7 @@ func TestMatrixFromEncryption(t *testing.T){
 	for r := 0; r < Rows; r++ {
 		for c := 0; c < Cols; c++ {
 			if c == Cols {
-				if C.Get(r, c) != e.b.Get(r, 0) {
+				if C.Get(r, c) != e.B.Get(r, 0) {
 					t.Errorf("MatrixFromEncryption did not copy element at row %d, column %d from b to C", r, c)
 				}
 			} else {
