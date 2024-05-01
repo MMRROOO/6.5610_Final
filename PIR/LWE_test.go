@@ -8,8 +8,8 @@ import (
 
 func TestEncDec(t *testing.T) {
 
-	secret := matrix.MakeMatrix(lwe.N, 1, 1, q)
-	pt := matrix.MakeMatrix(lwe.M, 1, 1, q)
+	secret := matrix.MakeMatrix(lwe.N, 1, 1, 2147483647)
+	pt := matrix.MakeMatrix(lwe.M, 1, 1, 2147483647)
 	pt.LWERound()
 	enc := lwe.ENC(secret, pt)
 	dec := lwe.DEC(secret, enc.A, enc.B)
@@ -24,12 +24,12 @@ func TestEncDec(t *testing.T) {
 }
 
 func TestLWERound(t *testing.T) {
-	pt := matrix.MakeMatrix(lwe.M, 1, 1, q)
+	pt := matrix.MakeMatrix(lwe.M, 1, 1, 2147483647)
 	pt.LWERound()
 	for i := 0; i < lwe.M; i++ {
-		if pt.Get(i, 0) >= q {
+		if pt.Get(i, 0) >= 2147483647 {
 			t.Errorf("LWERound failed at row %d", i)
-			t.Log("Expected ", pt.Get(i, 0), " to be less than ", q)
+			t.Log("Expected ", pt.Get(i, 0), " to be less than ", 2147483647)
 			// leave early to avoid spamming the output
 			return
 		}

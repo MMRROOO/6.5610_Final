@@ -1,7 +1,6 @@
 package main
 
 import (
-	lwe "pir/PIR/LWE"
 	matrix "pir/PIR/Matrix"
 	"testing"
 )
@@ -10,11 +9,11 @@ var Rows = 30
 var Cols = 40
 
 // zero matrix
-var Z = matrix.MakeMatrix(Rows, Cols, 0, q)
+var Z = matrix.MakeMatrix(Rows, Cols, 0, 2147483647)
 
 // random matrix
-var A = matrix.MakeMatrix(Rows, Cols, 1, q)
-var B = matrix.MakeMatrix(Rows, Cols, 1, q)
+var A = matrix.MakeMatrix(Rows, Cols, 1, 2147483647)
+var B = matrix.MakeMatrix(Rows, Cols, 1, 2147483647)
 
 func TestMakeMatrix(t *testing.T) {
 	// t.Parallel()
@@ -65,7 +64,7 @@ func TestCopy(t *testing.T) {
 
 func TestEncryptionFromMatrix(t *testing.T) {
 	// t.Parallel()
-	Ans := matrix.MakeMatrix(Rows, Cols, 1, q)
+	Ans := matrix.MakeMatrix(Rows, Cols, 1, 2147483647)
 	encryption := matrix.EncryptionFromMatrix(Ans)
 	eA := encryption.A
 	eb := encryption.B
@@ -95,7 +94,7 @@ func TestEncryptionFromMatrix(t *testing.T) {
 
 func TestMatrixFromEncryption(t *testing.T) {
 	// t.Parallel()
-	e := lwe.Encryption{A: A, B: matrix.MakeMatrix(Rows, 1, 1, q)}
+	e := matrix.Encryption{A: A, B: matrix.MakeMatrix(Rows, 1, 1, 2147483647)}
 	C := matrix.MatrixFromEncryption(e)
 	if C.Rows != Rows || C.Columns != Cols+1 {
 		t.Errorf("MatrixFromEncryption made matrix of size %d x %d; got %d x %d", Rows, Cols+1, C.Rows, C.Columns)
