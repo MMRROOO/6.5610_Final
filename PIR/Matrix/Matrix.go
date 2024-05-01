@@ -34,7 +34,7 @@ func nrand() int64 { //secure implementation
 }
 
 func insecure_nrand(seed int64) int64 { //unsecure for testing only
-	insecure_rand.Seed(seed) // Seed the default Source in the math/rand package
+	insecure_rand.New(insecure_rand.NewSource(seed)) // Seed the default Source in the math/rand package
 
 	max_val := big.NewInt(1)           // Create a big.Int
 	max_val = max_val.Lsh(max_val, 62) // Left shift to get 2^62

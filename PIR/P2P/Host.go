@@ -17,7 +17,7 @@ type Host struct {
 func MakeHost(peers []*labrpc.ClientEnd, NFiles int, HashSize int, FileSize int) *Host {
 	H := new(Host)
 	H.Peers = peers
-	H.Data = matrix.MakeMatrix(FileSize/DATA_SIZE, NFiles, 0, q)
+	H.Data = matrix.MakeMatrix(FileSize/int(matrix.DATA_SIZE), NFiles, 0, q)
 	H.Hashes = matrix.MakeMatrix(32, NFiles, 0, q)
 	FillWithHashes(H.Hashes, H.Data)
 	return H
