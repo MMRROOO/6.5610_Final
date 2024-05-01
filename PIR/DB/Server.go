@@ -10,26 +10,17 @@ type Server struct {
 	A2   matrix.Matrix
 }
 
-type SingleHintReply struct {
-	Hint matrix.Matrix
-}
-
-type DoubleHintReply struct {
-	HintS matrix.Matrix
-	HintC matrix.Matrix
-}
-
-func (S *Server) Hint(reply SingleHintReply) {
+func (S *Server) Hint(args *SingleHintArgs, reply *SingleHintReply) {
 	reply.Hint.Multiply(S.Data, S.A1)
 }
 
-func (S *Server) DoubleHint(reply DoubleHintReply) {
+func (S *Server) DoubleHint(args *DoubleHintArgs, reply *DoubleHintReply) {
 	preDecomp := matrix.MakeMatrix(S.Data.Rows, S.A1.Columns, 0, q)
 	//Need to add decomposition/composition method?
 	preDecomp.Multiply(S.Data, S.A1)
 
-	reply.HintS = matrix.Decompose(preDecomp)
+	HintS := matrix.Decompose(preDecomp)
 
-	reply.HintC.Multiply(reply.HintS, S.A2)
+	reply.HintC.Multiply(HintS, S.A2)
 
 }
