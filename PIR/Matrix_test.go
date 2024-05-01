@@ -1,6 +1,7 @@
 package main
 
 import (
+	"math"
 	matrix "pir/PIR/Matrix"
 	"testing"
 )
@@ -9,12 +10,29 @@ var Rows = 30
 var Cols = 40
 
 // zero matrix
-var Z = matrix.MakeMatrix(Rows, Cols, 0, 2147483647)
+var Z = matrix.MakeMatrix(Rows, Cols, 0, q)
 
 // random matrix
-var A = matrix.MakeMatrix(Rows, Cols, 1, 2147483647)
-var B = matrix.MakeMatrix(Rows, Cols, 1, 2147483647)
+var A = matrix.MakeMatrix(Rows, Cols, 1, q)
+var B = matrix.MakeMatrix(Rows, Cols, 1, q)
 
+func isEqual(A matrix.Matrix, B matrix.Matrix) (bool) {
+	/*
+	Tells whether matrices A, B are equal
+	*/
+	if A.Rows != B.Rows || A.Columns != B.Columns {
+		return false
+	}
+
+	for r := 0; r < A.Rows; r++ {
+		for c := 0; c < A.Columns; c++ {
+			if A.Get(r, c) != B.Get(r, c) {
+				return false
+			}
+		}
+	}
+	return true
+}
 func TestMakeMatrix(t *testing.T) {
 	// t.Parallel()
 	if Z.Rows != Rows || Z.Columns != Cols {
@@ -31,17 +49,8 @@ func TestMakeMatrix(t *testing.T) {
 	}
 
 	// check that A not equal to B; MakeMatrix properly makes random matrices
-	isEqual := true
-	for r := 0; r < Rows; r++ {
-		for c := 0; c < Cols; c++ {
-			if A.Get(r, c) != B.Get(r, c) {
-				isEqual = false
-				break
-			}
-		}
-	}
-	if isEqual {
-		t.Errorf("MakeMatrix with randomization made two identical matrices")
+	if isEqual(A, B) {
+		t.Errorf("MakeMatrix made two equal matrices, expected randomization to make them different")
 	}
 
 }
@@ -53,18 +62,14 @@ func TestCopy(t *testing.T) {
 		t.Errorf("Copy did not copy matrix size")
 	}
 
-	for r := 0; r < Rows; r++ {
-		for c := 0; c < Cols; c++ {
-			if A.Get(r, c) != Acopy.Get(r, c) {
-				t.Errorf("Copy did not copy element at row %d, column %d", r, c)
-			}
-		}
+	if !isEqual(A, Acopy) {
+		t.Errorf("Copy did not copy matrix elements")
 	}
 }
 
 func TestEncryptionFromMatrix(t *testing.T) {
 	// t.Parallel()
-	Ans := matrix.MakeMatrix(Rows, Cols, 1, 2147483647)
+	Ans := matrix.MakeMatrix(Rows, Cols, 1, q)
 	encryption := matrix.EncryptionFromMatrix(Ans)
 	eA := encryption.A
 	eb := encryption.B
@@ -94,7 +99,7 @@ func TestEncryptionFromMatrix(t *testing.T) {
 
 func TestMatrixFromEncryption(t *testing.T) {
 	// t.Parallel()
-	e := matrix.Encryption{A: A, B: matrix.MakeMatrix(Rows, 1, 1, 2147483647)}
+	e := matrix.Encryption{A: A, B: matrix.MakeMatrix(Rows, 1, 1, q)}
 	C := matrix.MatrixFromEncryption(e)
 	if C.Rows != Rows || C.Columns != Cols+1 {
 		t.Errorf("MatrixFromEncryption made matrix of size %d x %d; got %d x %d", Rows, Cols+1, C.Rows, C.Columns)
@@ -112,5 +117,52 @@ func TestMatrixFromEncryption(t *testing.T) {
 				}
 			}
 		}
+	}
+}
+
+func TestDecompose(t *testing.T){
+	/*
+	k = ceiling(log q / log p)
+	Maps an `a x b` mod q matrix into a `ka x b`mod q matrix as its base-p decomposition
+	
+	*/
+	p := matrix.DATA_SIZE
+	k := logQ_logP
+
+	decomp := matrix.Decompose(A)
+	if decomp.Rows != k*Rows || decomp.Columns != Cols {
+		t.Errorf("Decompose made matrix of size %d x %d; got %d x %d", k*Rows, Cols, decomp.Rows, decomp.Columns)
+	}
+
+	for r := 0; r < A.Rows; r++ {
+		for c := 0; c < A.Columns; c++ {
+			for i := 0; i < k; i++ {
+				orig := A.Get(r, c)
+				num := orig % int64(math.Pow(float64(p), float64(i + 1)))
+				denom := (int64(math.Pow(float64(p), float64(i))))
+
+				DecompVal := num / denom
+
+				if decomp.Get(r*k+i, c) != DecompVal {
+					t.Errorf("Decompose did not copy element at row %d, column %d from A to decomp", r, c)
+					t.Log("Expected ", DecompVal, " got ", decomp.Get(r*k+i, c))
+					return
+				}
+
+
+			}
+		}
+	}
+
+}
+
+func TestCompose(t *testing.T){
+	// interprets each 𝜅 × 1 submatrix of its input as a base-𝑝 decomposition of a Z𝑞 element and outputs the matrix of these elements.
+	
+	decomp := matrix.Decompose(A)
+	composed := matrix.Compose(decomp)
+
+	if !isEqual(A, composed) {
+		t.Errorf("Compose did not return original matrix")
 	}
 }
