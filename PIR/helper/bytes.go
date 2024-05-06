@@ -29,3 +29,23 @@ func fileNameToBytesArr(FileName string) []byte {
    }
    return bs
 }
+
+/*
+Given a byte array `bs`, decode it to a file with name `FileName`
+*/
+func bytesArrToFile(FileName string, bs []byte) {
+   file, err := os.Create(FileName)
+   if err != nil {
+     fmt.Println(err)
+     return
+   }
+   defer file.Close()
+
+
+   // TODO: check if this is right
+   _, err = file.Write(bs)
+   if err != nil {
+     fmt.Println(err)
+     return
+   }
+}
