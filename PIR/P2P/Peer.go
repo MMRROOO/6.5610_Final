@@ -55,7 +55,7 @@ func (P *Peer) GetFileNames(server int) []int {
 	}
 	call_err := client.Call("Peer.PIRAns", &args, &reply)
 	if call_err != nil {
-		log.Fatal("arith error:", err)
+		log.Fatal("arith error:", call_err)
 	}
 
 	FileNames := MatrixToFileNames(PIR.Reconstruct(reply.Ans, P.secret))
@@ -66,11 +66,11 @@ func (P *Peer) GetFileNames(server int) []int {
 
 	pir_client, pir_err := rpc.DialHTTP("tcp", P.peers[server].ServerAdress+P.peers[server].Port)
 	if pir_err != nil {
-		log.Fatal("dialing:", err)
+		log.Fatal("dialing:", pir_err)
 	}
 	pir_call_err := pir_client.Call("Peer.PIRAns", &args, &reply)
 	if pir_call_err != nil {
-		log.Fatal("arith error:", err)
+		log.Fatal("arith error:", pir_call_err)
 	}
 
 	FileNames = append(FileNames, MatrixToFileNames(PIR.Reconstruct(reply.Ans, P.secret))...)
@@ -85,7 +85,14 @@ func (P *Peer) GetPeers(server int) []int {
 		qu1 := PIR.Query(i, P.secret)
 		args := PIRArgs{Qu: qu1}
 		reply := PIRReply{}
-		ok := P.peers[server].Call("Peer.PIRAns", &args, &reply)
+		pir_client, pir_err := rpc.DialHTTP("tcp", P.peers[server].ServerAdress+P.peers[server].Port)
+		if pir_err != nil {
+			log.Fatal("dialing:", pir_err)
+		}
+		pir_call_err := pir_client.Call("Peer.PIRAns", &args, &reply)
+		if pir_call_err != nil {
+			log.Fatal("arith error:", pir_call_err)
+		}
 
 		knownPeers = append(knownPeers, MatrixToPeers(PIR.Reconstruct(reply.Ans, P.secret))...)
 	}
@@ -100,7 +107,14 @@ func (P *Peer) GetFile(server int, index int) []int {
 		qu1 := PIR.Query(i, P.secret)
 		args := PIRArgs{Qu: qu1}
 		reply := PIRReply{}
-		ok := P.peers[server].Call("Peer.PIRAns", &args, &reply)
+		pir_client, pir_err := rpc.DialHTTP("tcp", P.peers[server].ServerAdress+P.peers[server].Port)
+		if pir_err != nil {
+			log.Fatal("dialing:", pir_err)
+		}
+		pir_call_err := pir_client.Call("Peer.PIRAns", &args, &reply)
+		if pir_call_err != nil {
+			log.Fatal("arith error:", pir_call_err)
+		}
 
 		fileMatrixes = append(fileMatrixes, PIR.Reconstruct(reply.Ans, P.secret))
 	}
