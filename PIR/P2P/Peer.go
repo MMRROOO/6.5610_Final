@@ -21,17 +21,9 @@ type Peer struct {
 
 var q int64 = 2147483647
 
-type PIRArgs struct {
-	Qu matrix.Encryption
-}
-
-type PIRReply struct {
-	Ans matrix.Matrix
-}
-
-func MakePeer(peers []*labrpc.ClientEnd, me int, knownPeers []int, Host *labrpc.ClientEnd) *Peer {
-	P := new(Peer)
-	P.peers = peers
+func MakePeer(me int, knownPeers []int, Host *labrpc.ClientEnd) *Peer {
+	P := Peer{}
+	P.peers = make([]*labrpc.ClientEnd, 0)
 	P.me = me
 	P.Data = matrix.MakeMatrix(256, 256, 0, q)
 	P.secret = matrix.MakeMatrix(256, 1, 1, q)
@@ -54,53 +46,52 @@ func (P *Peer) GetFileNames(server int) []int {
 
 	qu1 := PIR.Query(4, P.secret)
 	args := PIRArgs{Qu: qu1}
-	reply := PIRReply
+	reply := PIRReply{}
 	ok := P.peers[server].Call("Peer.PIRAns", &args, &reply)
 
-	FileNames := MatrixToFileNames(reconstruct(reply.Ans, P.secret))
+	FileNames := MatrixToFileNames(PIR.Reconstruct(reply.Ans, P.secret))
 
-	qu2 = Query(5, P.secret)
-	args = PIRArgs{Qu: qu1}
-	reply = PIRReply
+	qu2 := PIR.Query(5, P.secret)
+	args = PIRArgs{Qu: qu2}
+	reply = PIRReply{}
 	ok = P.peers[server].Call("Peer.PIRAns", &args, &reply)
 
-	FileNames = append(Filenames, MatrixToFileNames(reconstruct(reply.Ans, P.secret)))
+	FileNames = append(FileNames, MatrixToFileNames(PIR.Reconstruct(reply.Ans, P.secret))...)
 
 	return FileNames
 }
 
-func (P *Peers) GetPeers(server int) []int {
-	secret := MakeMatrix(N, 1, 1)
+func (P *Peer) GetPeers(server int) []int {
 
-	knownPeers := []int
+	knownPeers := make([]int, 0)
 	for i := 0; i < 4; i++ {
-		qu1 = Query(i, secret)
+		qu1 := PIR.Query(i, P.secret)
 		args := PIRArgs{Qu: qu1}
-		reply := PIRReply
+		reply := PIRReply{}
 		ok := P.peers[server].Call("Peer.PIRAns", &args, &reply)
 
-		knownPeers = append(knownPeers, MatrixToPeers(reconstruct(reply.Ans, P.secret)))
+		knownPeers = append(knownPeers, MatrixToPeers(PIR.Reconstruct(reply.Ans, P.secret))...)
 	}
 
 	return knownPeers
 }
 
-func (P *Peers) GetFile(server int, index int) []int {
+func (P *Peer) GetFile(server int, index int) []int {
 
-	fileMatrixes := []Matrix
+	fileMatrixes := make([]matrix.Matrix, 0)
 	for i := 0; i < 4; i++ {
-		qu1 = Query(i, secret)
+		qu1 := PIR.Query(i, P.secret)
 		args := PIRArgs{Qu: qu1}
-		reply := PIRReply
+		reply := PIRReply{}
 		ok := P.peers[server].Call("Peer.PIRAns", &args, &reply)
 
-		fileMatrixes = append(fileMatrixes, reconstruct(reply.Ans, P.secret))
+		fileMatrixes = append(fileMatrixes, PIR.Reconstruct(reply.Ans, P.secret))
 	}
 
 	return FileFromMatrixes(fileMatrixes)
 }
 
-func CheckHash(File Matrix, Hash [32]byte) bool {
+func CheckHash(File matrix.Matrix, Hash [32]byte) bool {
 	columnArray := File.GetColumn(0)
 	CHash := sha256.Sum256([]byte(columnArray))
 
@@ -108,6 +99,6 @@ func CheckHash(File Matrix, Hash [32]byte) bool {
 }
 
 func (P *Peer) PIRAns(args *PIRArgs, reply *PIRReply) {
-	reply.Ans = Ans(P.Data, args.Qu)
+	reply.Ans = PIR.Ans(P.Data, args.Qu)
 	return
 }

@@ -14,7 +14,7 @@ var logQ_logP = int((math.Log(float64(q)))/math.Log(float64(matrix.DATA_SIZE))) 
 
 var MAX_ERROR int64 = 10
 
-func Query(column int, secret matrix.Matrix) lwe.Encryption {
+func Query(column int, secret matrix.Matrix) matrix.Encryption {
 	qu := matrix.MakeMatrix(DBCOLUMNS, 1, 0, q)
 
 	qu.Set(column, 0, 1)
