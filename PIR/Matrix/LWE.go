@@ -1,28 +1,26 @@
-package lwe
-
-import "math"
-import matrix "pir/PIR/Matrix"
+package matrix
 
 var M = 100
 var N = 10
-var q int64 = 2147483647
-var DATA_SIZE int64 = 256
 
-var logQ_logP = int((math.Log(float64(q)))/math.Log(float64(DATA_SIZE))) + 1
+// var q int64 = 2147483647
+// var DATA_SIZE int64 = 256
 
-type Encryption struct {
-	A matrix.Matrix
-	B matrix.Matrix //testing
-}
+// var logQ_logP = int((math.Log(float64(q)))/math.Log(float64(DATA_SIZE))) + 1
 
-func ENC(secret matrix.Matrix, v matrix.Matrix) Encryption {
+// type Encryption struct {
+// 	A matrix.Matrix
+// 	B matrix.Matrix //testing
+// }
+
+func ENC(secret Matrix, v Matrix) Encryption {
 	M := v.Rows
 	N := secret.Rows
-	A := matrix.MakeMatrix(M, N, 1, q)
+	A := MakeMatrix(M, N, 1, q)
 
-	As := matrix.MakeMatrix(M, 1, 0, q)
+	As := MakeMatrix(M, 1, 0, q)
 
-	v_copy := matrix.Copy(v)
+	v_copy := Copy(v)
 
 	As.Multiply(A, secret)
 	As.AddError(4)
@@ -34,11 +32,11 @@ func ENC(secret matrix.Matrix, v matrix.Matrix) Encryption {
 
 }
 
-func DEC(secret matrix.Matrix, A matrix.Matrix, b matrix.Matrix) matrix.Matrix {
-	As := matrix.MakeMatrix(A.Rows, 1, 0, q)
+func DEC(secret Matrix, A Matrix, b Matrix) Matrix {
+	As := MakeMatrix(A.Rows, 1, 0, q)
 	As.Multiply(A, secret)
 
-	c := matrix.Copy(b)
+	c := Copy(b)
 
 	c.Subtract(As)
 

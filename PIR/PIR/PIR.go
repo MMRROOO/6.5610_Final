@@ -1,7 +1,6 @@
-package main
+package PIR
 
 import (
-	"fmt"
 	"math"
 	lwe "pir/PIR/LWE"
 	matrix "pir/PIR/Matrix"
@@ -128,48 +127,48 @@ func DoubleReconstruct(secret1 matrix.Matrix, secret2 matrix.Matrix, HintC matri
 
 }
 
-func main() {
-	//square root pir
-	// secret := MakeMatrix(N, 1, 1, q)
+// func main() {
+// 	//square root pir
+// 	// secret := MakeMatrix(N, 1, 1, q)
 
-	// DB := MakeMatrix(DBROWS, DBCOLUMNS, 1, q)
-	// DB.LWERound()
+// 	// DB := MakeMatrix(DBROWS, DBCOLUMNS, 1, q)
+// 	// DB.LWERound()
 
-	// qu := Query(0, secret)
-	// Ans := Ans(DB, qu)
-	// out := Reconstruct(Ans, secret)
+// 	// qu := Query(0, secret)
+// 	// Ans := Ans(DB, qu)
+// 	// out := Reconstruct(Ans, secret)
 
-	// out.Print()
-	// DB.PrintColumn(0)
+// 	// out.Print()
+// 	// DB.PrintColumn(0)
 
-	//DoublePIR
+// 	//DoublePIR
 
-	DB := matrix.MakeMatrix(DBROWS, DBCOLUMNS, 1, q)
-	DB.LWERound()
+// 	DB := matrix.MakeMatrix(DBROWS, DBCOLUMNS, 1, q)
+// 	DB.LWERound()
 
-	A1 := matrix.MakeMatrix(DBROWS, SMALLN, 1, q)
-	A2 := matrix.MakeMatrix(DBCOLUMNS, SMALLN, 1, q)
+// 	A1 := matrix.MakeMatrix(DBROWS, SMALLN, 1, q)
+// 	A2 := matrix.MakeMatrix(DBCOLUMNS, SMALLN, 1, q)
 
-	Secret1 := matrix.MakeMatrix(SMALLN, 1, 1, q)
-	Secret2 := matrix.MakeMatrix(SMALLN, 1, 1, q)
+// 	Secret1 := matrix.MakeMatrix(SMALLN, 1, 1, q)
+// 	Secret2 := matrix.MakeMatrix(SMALLN, 1, 1, q)
 
-	HintS, HintC := DoubleSetup(DB, A1, A2)
+// 	HintS, HintC := DoubleSetup(DB, A1, A2)
 
-	fmt.Print("After Setup\n")
-	row, col := 100, 18
+// 	fmt.Print("After Setup\n")
+// 	row, col := 100, 18
 
-	qu := DoubleQuery(row, col, Secret1, Secret2, A1, A2)
+// 	qu := DoubleQuery(row, col, Secret1, Secret2, A1, A2)
 
-	fmt.Print("After Query\n")
+// 	fmt.Print("After Query\n")
 
-	Ans := DoubleAns(DB, HintS, qu, A2)
+// 	Ans := DoubleAns(DB, HintS, qu, A2)
 
-	fmt.Print("After Ans\n")
+// 	fmt.Print("After Ans\n")
 
-	val := DoubleReconstruct(Secret1, Secret2, HintC, Ans)
+// 	val := DoubleReconstruct(Secret1, Secret2, HintC, Ans)
 
-	fmt.Print("After Reconstruct\n")
+// 	fmt.Print("After Reconstruct\n")
 
-	fmt.Print(val, DB.Get(row, col))
-	// DB.Print()
-}
+// 	fmt.Print(val, DB.Get(row, col))
+// 	// DB.Print()
+// }

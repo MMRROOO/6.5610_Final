@@ -2,6 +2,9 @@ package p2p
 
 import (
 	"crypto/sha256"
+	matrix "pir/PIR/Matrix"
+	"pir/PIR/PIR"
+	"pir/PIR/labrpc"
 	"sync"
 )
 
@@ -10,26 +13,28 @@ type Peer struct {
 	knownPeers []int
 	mu         sync.Mutex
 	me         int
-	Data       Matrix
-	secret     Matrix
+	Data       matrix.Matrix
+	secret     matrix.Matrix
 	Hashes     [][32]byte
 	Host       *labrpc.ClientEnd
 }
 
+var q int64 = 2147483647
+
 type PIRArgs struct {
-	Qu encryption
+	Qu matrix.Encryption
 }
 
 type PIRReply struct {
-	Ans Matrix
+	Ans matrix.Matrix
 }
 
 func MakePeer(peers []*labrpc.ClientEnd, me int, knownPeers []int, Host *labrpc.ClientEnd) *Peer {
 	P := new(Peer)
 	P.peers = peers
 	P.me = me
-	P.Data = MakeMatrix(256, 256, 0, q)
-	P.secret = MakeMatrix(256, 1, 1, q)
+	P.Data = matrix.MakeMatrix(256, 256, 0, q)
+	P.secret = matrix.MakeMatrix(256, 1, 1, q)
 	P.knownPeers = knownPeers
 	P.Host = Host
 
@@ -37,17 +42,17 @@ func MakePeer(peers []*labrpc.ClientEnd, me int, knownPeers []int, Host *labrpc.
 }
 
 // TODO: given vector of file names return list of file names it represents
-func MatrixToFileNames(M Matrix) []int {}
+func MatrixToFileNames(M matrix.Matrix) []int {}
 
 // TODO: given 4 matrixes return file data
-func FileFromMatrixes(M []Matrix) []int {}
+func FileFromMatrixes(M []matrix.Matrix) []int {}
 
 // TODO: given vector of peers return list of file names it represents
-func MatrixToPeers(M Matrix) []int {}
+func MatrixToPeers(M matrix.Matrix) []int {}
 
-func (P *Peers) GetFileNames(server int) []int {
+func (P *Peer) GetFileNames(server int) []int {
 
-	qu1 = Query(4, P.secret)
+	qu1 := PIR.Query(4, P.secret)
 	args := PIRArgs{Qu: qu1}
 	reply := PIRReply
 	ok := P.peers[server].Call("Peer.PIRAns", &args, &reply)
