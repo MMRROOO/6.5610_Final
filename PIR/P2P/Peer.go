@@ -2,6 +2,7 @@ package p2p
 
 import (
 	"log"
+	"net/http"
 	"net/rpc"
 	matrix "pir/PIR/Matrix"
 	"pir/PIR/PIR"
@@ -31,8 +32,25 @@ func MakePeer(Host Endpoint, Hashes []byte) {
 
 }
 
+func getIPAddress(req *http.Request) string {
+	ipAddress := req.Header.Get("X-Real-Ip") // Check for the X-Real-Ip header
+	if ipAddress == "" {
+		ipAddress = req.Header.Get("X-Forwarded-For") // If X-Real-Ip is not available, try X-Forwarded-For
+	}
+	if ipAddress == "" {
+		ipAddress = req.RemoteAddr // If both headers are not available, fall back to RemoteAddr
+	}
+	return ipAddress
+}
+
+func handler(w http.ResponseWriter, req *http.Request) string {
+	return getIPAddress(req)
+}
+
 // TODO: Create Peers own endpoint
-func CreateEndpointSelf() Endpoint {}
+func CreateEndpointSelf() Endpoint {
+	
+}
 
 // TODO: given vector of file names return list of file names it represents
 func MatrixToFileNames(M matrix.Matrix) []int {}
