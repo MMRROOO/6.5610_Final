@@ -22,3 +22,8 @@ type GetFileReply struct {
 	Ans  matrix.Matrix
 	Peer *labrpc.ClientEnd
 }
+
+type Endpoint struct {
+	ServerAdress string
+	Port         string
+}
