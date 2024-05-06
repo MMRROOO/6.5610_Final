@@ -1,37 +1,36 @@
 package p2p
 
 import (
-	"crypto/sha256"
 	matrix "pir/PIR/Matrix"
 	"pir/PIR/PIR"
-	"pir/PIR/labrpc"
 	"sync"
 )
 
 type Peer struct {
-	peers      []*labrpc.ClientEnd
-	knownPeers []int
-	mu         sync.Mutex
-	me         int
-	Data       matrix.Matrix
-	secret     matrix.Matrix
-	Hashes     [][32]byte
-	Host       *labrpc.ClientEnd
+	peers  []Endpoint
+	mu     sync.Mutex
+	me     Endpoint
+	Data   matrix.Matrix
+	secret matrix.Matrix
+	Hashes []byte
+	Host   Endpoint
 }
 
 var q int64 = 2147483647
 
-func MakePeer(me int, knownPeers []int, Host *labrpc.ClientEnd) *Peer {
+func MakePeer(Host Endpoint, Hashes []byte) {
 	P := Peer{}
-	P.peers = make([]*labrpc.ClientEnd, 0)
-	P.me = me
+	P.peers = make([]Endpoint, 0)
+	P.me = CreateEndpointSelf()
 	P.Data = matrix.MakeMatrix(256, 256, 0, q)
 	P.secret = matrix.MakeMatrix(256, 1, 1, q)
-	P.knownPeers = knownPeers
 	P.Host = Host
+	P.Hashes = Hashes
 
-	return P
 }
+
+// TODO: Create Peers own endpoint
+func CreateEndpointSelf() Endpoint {}
 
 // TODO: given vector of file names return list of file names it represents
 func MatrixToFileNames(M matrix.Matrix) []int {}
@@ -91,12 +90,12 @@ func (P *Peer) GetFile(server int, index int) []int {
 	return FileFromMatrixes(fileMatrixes)
 }
 
-func CheckHash(File matrix.Matrix, Hash [32]byte) bool {
-	columnArray := File.GetColumn(0)
-	CHash := sha256.Sum256([]byte(columnArray))
+// func CheckHash(File matrix.Matrix, Hash byte) bool {
+// 	columnArray := File.GetColumn(0)
+// 	CHash := sha256.Sum256([]byte(columnArray))
 
-	return CHash == Hash
-}
+// 	return CHash == Hash
+// }
 
 func (P *Peer) PIRAns(args *PIRArgs, reply *PIRReply) {
 	reply.Ans = PIR.Ans(P.Data, args.Qu)
