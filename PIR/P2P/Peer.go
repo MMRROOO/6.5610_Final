@@ -1,6 +1,8 @@
 package p2p
 
 import (
+	"log"
+	"net/rpc"
 	matrix "pir/PIR/Matrix"
 	"pir/PIR/PIR"
 	"sync"
@@ -46,14 +48,30 @@ func (P *Peer) GetFileNames(server int) []int {
 	qu1 := PIR.Query(4, P.secret)
 	args := PIRArgs{Qu: qu1}
 	reply := PIRReply{}
-	ok := P.peers[server].Call("Peer.PIRAns", &args, &reply)
+
+	client, err := rpc.DialHTTP("tcp", P.peers[server].ServerAdress+P.peers[server].Port)
+	if err != nil {
+		log.Fatal("dialing:", err)
+	}
+	call_err := client.Call("Peer.PIRAns", &args, &reply)
+	if call_err != nil {
+		log.Fatal("arith error:", err)
+	}
 
 	FileNames := MatrixToFileNames(PIR.Reconstruct(reply.Ans, P.secret))
 
 	qu2 := PIR.Query(5, P.secret)
 	args = PIRArgs{Qu: qu2}
 	reply = PIRReply{}
-	ok = P.peers[server].Call("Peer.PIRAns", &args, &reply)
+
+	pir_client, pir_err := rpc.DialHTTP("tcp", P.peers[server].ServerAdress+P.peers[server].Port)
+	if pir_err != nil {
+		log.Fatal("dialing:", err)
+	}
+	pir_call_err := pir_client.Call("Peer.PIRAns", &args, &reply)
+	if pir_call_err != nil {
+		log.Fatal("arith error:", err)
+	}
 
 	FileNames = append(FileNames, MatrixToFileNames(PIR.Reconstruct(reply.Ans, P.secret))...)
 
