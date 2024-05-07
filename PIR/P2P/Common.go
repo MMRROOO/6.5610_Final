@@ -24,6 +24,6 @@ type GetFileReply struct {
 }
 
 type Endpoint struct {
-	ServerAdress string
-	Port         string
+	ServerAddress string
+	Port          string
 }
