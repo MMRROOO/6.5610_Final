@@ -1,36 +1,55 @@
 package p2p
 
 import (
-	matrix "pir/PIR/Matrix"
-	"pir/PIR/PIR"
-	"pir/PIR/labrpc"
-
+	"fmt"
 	"sync"
 )
 
 type Host struct {
-	Peers  []*labrpc.ClientEnd
-	mu     sync.Mutex
-	Hashes matrix.Matrix
-	Data   matrix.Matrix
+	Peers []Endpoint
+	mu    sync.Mutex
+	Me    Endpoint
+	// Hashes matrix.Matrix
+	// Data   matrix.Matrix
 }
 
-func MakeHost(NFiles int, HashSize int, FileSize int) *Host {
-	H := new(Host)
-	H.Peers = make([]*labrpc.ClientEnd, 0)
-
+// all files in Data must already be split by chunk and a multiple of 256*248
+func MakeHost(Data []byte) *Host {
+	H := Host{}
+	H.Peers = H.MakeAllSeedPeers(Data)
+	H.Me = CreateEndpointSelf(10000)
 	//TODO Make peers so that all data is owned
+
 	// P = MakePeer(,)
-	H.Data = matrix.MakeMatrix(FileSize/int(matrix.DATA_SIZE), NFiles, 0, q)
-	H.Hashes = matrix.MakeMatrix(32, NFiles, 0, q)
+	// H.Data = matrix.MakeMatrix(FileSize/int(matrix.DATA_SIZE), NFiles, 0, q)
+
+	// H.Hashes = matrix.MakeMatrix(32, NFiles, 0, q)
 	// FillWithHashes(H.Hashes, H.Data)
-	return H
+	return &H
 }
 
-func (H *Host) GetFile(args *GetFileArgs, reply *GetFileReply) {
-	reply.Ans = PIR.Ans(H.Data, args.Qu)
+func (H *Host) MakeAllSeedPeers(Data []byte) []Endpoint {
+	endpoints := make([]Endpoint, 0)
+	fmt.Printf("before Made peer")
+
+	for i := 0; i < len(Data)/(256*248); i++ {
+		endpoints = append(endpoints, MakeSeedPeer(Data[i*256*248:(i+1)*256*248], i))
+		fmt.Printf("Made peer %d", i)
+	}
+	return endpoints
+
+}
+
+//	func (H *Host) GetFile(args *GetFileArgs, reply *GetFileReply) {
+//		reply.Ans = PIR.Ans(H.Data, args.Qu)
+//		H.Peers = append(H.Peers, args.Me)
+//		reply.Peer = H.Peers[math.rand()%len(H.Peers)]
+//	}
+func (H *Host) SendPeers(args *SendPeersArgs, reply *SendPeersReply) {
+	reply.Peers = H.Peers
+
 	H.Peers = append(H.Peers, args.Me)
-	reply.Peer = H.Peers[math.rand()%len(H.Peers)]
+
 }
 
 // func FillWithHashes(Hash matrix.Matrix, Data matrix.Matrix) {

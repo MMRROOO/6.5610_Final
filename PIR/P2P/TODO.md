@@ -1,3 +1,5 @@
+RPC Stuff
+
 1. change labrpcs to actual rpcs
     link: https://pkg.go.dev/net/rpc
 
@@ -8,4 +10,12 @@
 
 4. have endpoints be passed betweent he hosts and peers(undefined)
 
- 
+
+
+Other general stuff:
+
+5. function that turns a file into list of bytes, and  backwards.
+
+6. functions to turn matrix types into usable data and back
+
+7. refactor code to work.
