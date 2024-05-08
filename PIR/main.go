@@ -5,6 +5,7 @@ import (
 	"crypto/sha256"
 	"fmt"
 	p2p "pir/PIR/P2P"
+	"time"
 )
 
 func main() {
@@ -20,8 +21,11 @@ func main() {
 	fmt.Print("make peer")
 
 	for !compare(Peer.DesiredFile, Data[0:1024]) {
-		fmt.Print("Worked")
+		fmt.Print("Working\n")
+		time.Sleep(100 * time.Millisecond)
 	}
+	fmt.Print("Worked")
+
 	// e := p2p.CreateEndpointSelf()
 	// client, err := rpc.DialHTTP("tcp", e.ServerAddress+e.Port)
 	// if err != nil {
@@ -58,7 +62,7 @@ func Hashes(Data []byte) []byte {
 	for i := 0; i < len(Data)/1024; i++ {
 		h := sha256.Sum256(Data[i*1024 : (i+1)*1024])
 		for j := 0; j < 32; j++ {
-			hashes[i*1024+j] = h[j]
+			hashes[i*32+j] = h[j]
 		}
 	}
 	return hashes

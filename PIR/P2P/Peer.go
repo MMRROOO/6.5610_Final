@@ -37,7 +37,7 @@ var q int64 = 2147483647
 func MakePeer(Host Endpoint, Hashes []byte, FileToDownload int) *Peer {
 	P := Peer{}
 	P.peers = make([]Endpoint, 0)
-	P.me = CreateEndpointSelf(0)
+	P.me = CreateEndpointSelf(100)
 	P.Data = matrix.MakeMatrix(256, 256, 0, q)
 	P.secret = matrix.MakeMatrix(256, 1, 1, q)
 	P.Host = Host
@@ -74,7 +74,7 @@ func FillMatrix(Matrix matrix.Matrix, Data []byte) {
 	}
 }
 
-var ipAddress string
+var ipAddress string = "localhost"
 
 func handler(w http.ResponseWriter, req *http.Request) {
 	ipAddress = req.Header.Get("X-Real-Ip") // Store the IP address from the request header
@@ -84,11 +84,13 @@ func handler(w http.ResponseWriter, req *http.Request) {
 	if ipAddress == "" {
 		ipAddress = req.RemoteAddr
 	}
+	ipAddress = "localhost"
+
 }
 
 // TODO: Create Peers own endpoint
 func CreateEndpointSelf(i int) Endpoint {
-	http.HandleFunc("/"+string(i), handler)
+	http.HandleFunc("/"+fmt.Sprint(i), handler)
 	fmt.Print("1")
 	go http.ListenAndServe(":8080", nil)
 	fmt.Print("2")
@@ -120,7 +122,7 @@ func (P *Peer) GetFileNames(server int) []int {
 	args := PIRArgs{Qu: qu1}
 	reply := PIRReply{}
 
-	client, err := rpc.DialHTTP("tcp", P.peers[server].ServerAddress+P.peers[server].Port)
+	client, err := rpc.DialHTTP("tcp", P.peers[server].ServerAddress+":"+P.peers[server].Port)
 	if err != nil {
 		log.Fatal("dialing:", err)
 	}
@@ -135,7 +137,7 @@ func (P *Peer) GetFileNames(server int) []int {
 	args = PIRArgs{Qu: qu2}
 	reply = PIRReply{}
 
-	pir_client, pir_err := rpc.DialHTTP("tcp", P.peers[server].ServerAddress+P.peers[server].Port)
+	pir_client, pir_err := rpc.DialHTTP("tcp", P.peers[server].ServerAddress+":"+P.peers[server].Port)
 	if pir_err != nil {
 		log.Fatal("dialing:", pir_err)
 	}
@@ -156,7 +158,7 @@ func (P *Peer) GetPeers(server int) []int {
 		qu1 := PIR.Query(i, P.secret)
 		args := PIRArgs{Qu: qu1}
 		reply := PIRReply{}
-		pir_client, pir_err := rpc.DialHTTP("tcp", P.peers[server].ServerAddress+P.peers[server].Port)
+		pir_client, pir_err := rpc.DialHTTP("tcp", P.peers[server].ServerAddress+":"+P.peers[server].Port)
 		if pir_err != nil {
 			log.Fatal("dialing:", pir_err)
 		}
@@ -178,7 +180,7 @@ func (P *Peer) GetFile(server int, index int) []byte {
 		qu1 := PIR.Query(i, P.secret)
 		args := PIRArgs{Qu: qu1}
 		reply := PIRReply{}
-		pir_client, pir_err := rpc.DialHTTP("tcp", P.peers[server].ServerAddress+P.peers[server].Port)
+		pir_client, pir_err := rpc.DialHTTP("tcp", P.peers[server].ServerAddress+":"+P.peers[server].Port)
 		if pir_err != nil {
 			log.Fatal("dialing:", pir_err)
 		}
@@ -221,7 +223,7 @@ func (P *Peer) ticker() {
 		args.Me = P.me
 		reply := SendPeersReply{}
 
-		client, err := rpc.DialHTTP("tcp", P.Host.ServerAddress+P.Host.Port)
+		client, err := rpc.DialHTTP("tcp", P.Host.ServerAddress+":"+P.Host.Port)
 		if err != nil {
 			log.Fatal("dialing:", err)
 		}
