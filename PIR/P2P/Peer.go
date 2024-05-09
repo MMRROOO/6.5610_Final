@@ -77,6 +77,9 @@ func FillMatrix(Matrix matrix.Matrix, Data []byte) {
 var ipAddress string = "localhost"
 
 func handler(w http.ResponseWriter, req *http.Request) {
+	/*
+	get its own IP address so it can send to tracker
+	*/
 	ipAddress = req.Header.Get("X-Real-Ip") // Store the IP address from the request header
 	if ipAddress == "" {
 		ipAddress = req.Header.Get("X-Forwarded-For")
@@ -90,6 +93,9 @@ func handler(w http.ResponseWriter, req *http.Request) {
 
 // TODO: Create Peers own endpoint
 func CreateEndpointSelf(i int) Endpoint {
+	/*
+	i is ID of the peer (unique)
+	*/
 	http.HandleFunc("/"+fmt.Sprint(i), handler)
 	fmt.Print("1")
 	go http.ListenAndServe(":8080", nil)
