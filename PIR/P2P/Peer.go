@@ -4,6 +4,7 @@ import (
 	"crypto/sha256"
 	"fmt"
 	"log"
+	"net"
 	"net/http"
 	"net/rpc"
 	matrix "pir/PIR/Matrix"
@@ -36,6 +37,17 @@ var q int64 = 2147483647
 
 func MakePeer(Host Endpoint, Hashes []byte, FileToDownload int) *Peer {
 	P := Peer{}
+
+	rpc.Register(P)
+	rpc.HandleHTTP()
+	// Listen for requests on port 1234
+	l, e := net.Listen("tcp", "0")
+	fmt.Print("Endpoint: ", l.Addr().String(), "\n")
+	if e != nil {
+		log.Fatal("listen error:", e)
+	}
+	http.Serve(l, nil)
+
 	P.peers = make([]Endpoint, 0)
 	P.me = CreateEndpointSelf(100)
 	P.Data = matrix.MakeMatrix(256, 256, 0, q)
@@ -57,6 +69,14 @@ func MakePeer(Host Endpoint, Hashes []byte, FileToDownload int) *Peer {
 func MakeSeedPeer(Data []byte, i int) Endpoint {
 	P := Peer{}
 	fmt.Print("before endpoint")
+	rpc.Register(P)
+	rpc.HandleHTTP()
+	// Listen for requests on port 1234
+	l, e := net.Listen("tcp", ":808"+fmt.Sprint(i))
+	if e != nil {
+		log.Fatal("listen error:", e)
+	}
+	http.Serve(l, nil)
 
 	P.me = CreateEndpointSelf(i)
 	fmt.Print("made endpoint")
@@ -90,6 +110,7 @@ func handler(w http.ResponseWriter, req *http.Request) {
 
 // TODO: Create Peers own endpoint
 func CreateEndpointSelf(i int) Endpoint {
+
 	http.HandleFunc("/"+fmt.Sprint(i), handler)
 	fmt.Print("1")
 	go http.ListenAndServe(":8080", nil)
@@ -203,9 +224,9 @@ func CheckHash(File matrix.Matrix, Hash [32]byte) bool {
 	return CHash == Hash
 }
 
-func (P *Peer) PIRAns(args *PIRArgs, reply *PIRReply) {
+func (P *Peer) PIRAns(args *PIRArgs, reply *PIRReply) error {
 	reply.Ans = PIR.Ans(P.Data, args.Qu)
-	return
+	return nil
 }
 
 func intToByte(s []int) []byte {
