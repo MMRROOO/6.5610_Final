@@ -2,9 +2,15 @@ package p2p
 
 import (
 	matrix "pir/PIR/Matrix"
-	"pir/PIR/labrpc"
 )
 
+type SendPeersArgs struct {
+	Me Endpoint
+}
+
+type SendPeersReply struct {
+	Peers []Endpoint
+}
 type PIRArgs struct {
 	Qu matrix.Encryption
 }
@@ -14,16 +20,16 @@ type PIRReply struct {
 }
 
 type GetFileArgs struct {
-	Me *labrpc.ClientEnd
+	Me *Endpoint
 	Qu matrix.Encryption
 }
 
 type GetFileReply struct {
 	Ans  matrix.Matrix
-	Peer *labrpc.ClientEnd
+	Peer *Endpoint
 }
 
 type Endpoint struct {
-	ServerAdress string
-	Port         string
+	ServerAddress string
+	Port          string
 }

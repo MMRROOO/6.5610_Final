@@ -2,7 +2,6 @@ package PIR
 
 import (
 	"math"
-	lwe "pir/PIR/LWE"
 	matrix "pir/PIR/Matrix"
 )
 
@@ -19,7 +18,7 @@ func Query(column int, secret matrix.Matrix) matrix.Encryption {
 
 	qu.Set(column, 0, 1)
 
-	e := lwe.ENC(secret, qu)
+	e := matrix.ENC(secret, qu)
 
 	return e
 
@@ -37,7 +36,7 @@ func Reconstruct(ans matrix.Matrix, secret matrix.Matrix) matrix.Matrix {
 
 	enc := matrix.EncryptionFromMatrix(ans)
 
-	v := lwe.DEC(secret, enc.A, enc.B)
+	v := matrix.DEC(secret, enc.A, enc.B)
 
 	return v
 }
