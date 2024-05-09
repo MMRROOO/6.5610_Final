@@ -2,12 +2,14 @@ package p2p
 
 import (
 	"fmt"
-	"sync"
+	"log"
+	"net"
+	"net/http"
+	"net/rpc"
 )
 
 type Host struct {
 	Peers []Endpoint
-	mu    sync.Mutex
 	Me    Endpoint
 	// Hashes matrix.Matrix
 	// Data   matrix.Matrix
@@ -16,8 +18,20 @@ type Host struct {
 // all files in Data must already be split by chunk and a multiple of 256*248
 func MakeHost(Data []byte) *Host {
 	H := Host{}
-	H.Peers = H.MakeAllSeedPeers(Data)
-	H.Me = CreateEndpointSelf(10000)
+	fmt.Printf("before register")
+	rpc.Register(&H)
+	rpc.HandleHTTP()
+	// Listen for requests on port 1234
+	l, e := net.Listen("tcp", ":0")
+
+	if e != nil {
+		log.Fatal("listen error:", e)
+	}
+	fmt.Print("Endpoint: ", l, "\n")
+	http.Serve(l, nil)
+	H.Peers = MakeAllSeedPeers(H, Data)
+	// H.Me = CreateEndpointSelf(10000)
+
 	//TODO Make peers so that all data is owned
 
 	// P = MakePeer(,)
@@ -28,7 +42,7 @@ func MakeHost(Data []byte) *Host {
 	return &H
 }
 
-func (H *Host) MakeAllSeedPeers(Data []byte) []Endpoint {
+func MakeAllSeedPeers(H Host, Data []byte) []Endpoint {
 	endpoints := make([]Endpoint, 0)
 	fmt.Printf("before Made peer")
 
@@ -45,11 +59,12 @@ func (H *Host) MakeAllSeedPeers(Data []byte) []Endpoint {
 //		H.Peers = append(H.Peers, args.Me)
 //		reply.Peer = H.Peers[math.rand()%len(H.Peers)]
 //	}
-func (H *Host) SendPeers(args *SendPeersArgs, reply *SendPeersReply) {
+func (H *Host) SendPeers(args *SendPeersArgs, reply *SendPeersReply) error {
 	reply.Peers = H.Peers
 
 	H.Peers = append(H.Peers, args.Me)
 
+	return nil
 }
 
 // func FillWithHashes(Hash matrix.Matrix, Data matrix.Matrix) {
