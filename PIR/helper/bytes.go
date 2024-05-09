@@ -1,4 +1,5 @@
-package main
+package helper
+
 import (
    "bufio"
    "fmt"
