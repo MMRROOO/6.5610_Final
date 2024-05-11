@@ -307,3 +307,22 @@ func (A *Matrix) LWERound() {
 		}
 	}
 }
+
+func IsEqual(A Matrix, B Matrix) (bool) {
+	/*
+	Tells whether matrices A, B are equal
+	*/
+	
+	if A.Rows != B.Rows || A.Columns != B.Columns {
+		return false
+	}
+
+	for r := 0; r < A.Rows; r++ {
+		for c := 0; c < A.Columns; c++ {
+			if A.Get(r, c) != B.Get(r, c) {
+				return false
+			}
+		}
+	}
+	return true
+}

@@ -8,24 +8,6 @@ import (
 var Rows = 30
 var Cols = 40
 
-func isEqual(A Matrix, B Matrix) (bool) {
-	/*
-	Tells whether matrices A, B are equal
-	*/
-	
-	if A.Rows != B.Rows || A.Columns != B.Columns {
-		return false
-	}
-
-	for r := 0; r < A.Rows; r++ {
-		for c := 0; c < A.Columns; c++ {
-			if A.Get(r, c) != B.Get(r, c) {
-				return false
-			}
-		}
-	}
-	return true
-}
 func TestMakeMatrix(t *testing.T) {
 	Z := MakeMatrix(Rows, Cols, 0, q)
 	// t.Parallel()
@@ -45,7 +27,7 @@ func TestMakeMatrix(t *testing.T) {
 	B := MakeMatrix(Rows, Cols, 1, q)
 
 	// check that A not equal to B; MakeMatrix properly makes random matrices
-	if isEqual(A, B) {
+	if IsEqual(A, B) {
 		t.Errorf("MakeMatrix made two equal matrices, expected randomization to make them different")
 	}
 
@@ -59,7 +41,7 @@ func TestCopy(t *testing.T) {
 		t.Errorf("Copy did not copy matrix size")
 	}
 
-	if !isEqual(A, Acopy) {
+	if !IsEqual(A, Acopy) {
 		t.Errorf("Copy did not copy matrix elements")
 	}
 }
@@ -163,7 +145,7 @@ func TestCompose(t *testing.T){
 	decomp := Decompose(A)
 	composed := Compose(decomp)
 
-	if !isEqual(A, composed) {
+	if !IsEqual(A, composed) {
 		t.Errorf("Compose did not return original matrix")
 	}
 }
