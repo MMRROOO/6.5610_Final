@@ -1,7 +1,6 @@
-package main
+package helper
 
 import (
-	lwe "pir/PIR/LWE"
 	matrix "pir/PIR/Matrix"
 	"testing"
 
@@ -32,8 +31,12 @@ func TestMatrixToFileNames(t *testing.T) {
 		val := 256 * (2 * i - 1) + 2 * (i - 1)
 		E = append(E, val)
 	}
-	if !matrix.CompareIntSlices(R, E) {
-		t.Errorf("Expected %v, got %v", E, R)
+
+	for i := 0; i < 128; i++ {
+		if R[i] != E[i] {
+			t.Errorf("Expected %v, got %v", E, R)
+			return
+		}
 	}
 }
 
@@ -44,7 +47,11 @@ func TestFileFromMatrices(t *testing.T){
 		M.Set(i, 0, int64(255-i))
 	}
 	R := FileFromMatrices(MatrixToFileNames(M))
-	if !matrix.CompareMatrices(R, M) {
-		t.Errorf("Expected %v, got %v", M, R)
+	
+	for i := 0; i < 256; i++ {
+		if R.Get(i, 0) != M.Get(i, 0) {
+			t.Errorf("Expected %v, got %v", M, R)
+			return
+		}
 	}
 }

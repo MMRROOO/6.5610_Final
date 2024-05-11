@@ -2,20 +2,20 @@ package helper
 
 import (
 	matrix "pir/PIR/Matrix"
-	pir "pir/PIR/PIR"
+	// pir "pir/PIR/PIR"
 	p2p "pir/PIR/P2P"
 
 	"sync"
 )
 
 type Peer struct {
-	peers  []Endpoint
+	peers  []p2p.Endpoint
 	mu     sync.Mutex
-	me     Endpoint
+	me     p2p.Endpoint
 	Data   matrix.Matrix
 	secret matrix.Matrix
 	Hashes []byte
-	Host   Endpoint
+	Host   p2p.Endpoint
 }
 
 
@@ -61,7 +61,6 @@ func FileFromMatrices(files []int) matrix.Matrix {
 	for i := 0; i < 128; i++ {
 		res.Set(i * 2, 0, int64(files[i] / 256))
 		res.Set(i * 2 + 1, 0, int64(files[i] % 256))
-
 	}
 	return res
 }
