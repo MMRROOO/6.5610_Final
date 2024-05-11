@@ -134,7 +134,7 @@ func MatrixToFileNames(M matrix.Matrix) []int {
 }
 
 // TODO: given 4 matrixes return file data
-func FileFromMatrixes(M []matrix.Matrix) []byte {
+func FileFromMatrices(M []matrix.Matrix) []byte {
 	return make([]byte, 0)
 }
 
@@ -219,7 +219,7 @@ func (P *Peer) GetFile(server int, index int) []byte {
 		fileMatrixes = append(fileMatrixes, PIR.Reconstruct(reply.Ans, P.secret))
 	}
 
-	return FileFromMatrixes(fileMatrixes)
+	return FileFromMatrices(fileMatrixes)
 }
 
 func CheckHash(File matrix.Matrix, Hash [32]byte) bool {
