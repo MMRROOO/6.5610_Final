@@ -70,3 +70,13 @@ func MatrixtoFileChunk(M []matrix.Matrix) []byte {
 	}
 	return res
 }
+
+func FileChunkToMatrix(M []byte) matrix.Matrix {
+	res := matrix.MakeMatrix(256, 4, 0, 2147483647)
+	for i := 0; i < 4; i++ {
+		for j := 0; j < 256; j++ {
+			res.Set(j, i, int64(M[i*256+j]))
+		}
+	}
+	return res
+}

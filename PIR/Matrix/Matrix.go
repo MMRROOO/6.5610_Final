@@ -33,6 +33,14 @@ func nrand() int64 { //secure implementation
 	return x
 }
 
+func (M *Matrix) PutFile(A Matrix, index int) {
+	for c := 0; c < A.Columns; c++ {
+		for r := 0; r < A.Rows; r++ {
+			M.Set(r, c+index, A.Get(r, c))
+		}
+	}
+}
+
 func insecure_nrand(seed int64) int64 { //unsecure for testing only
 	insecure_rand.New(insecure_rand.NewSource(seed)) // Seed the default Source in the math/rand package
 

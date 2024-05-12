@@ -20,12 +20,21 @@ func main() {
 	Peer := p2p.MakePeer(Host.Me, hashes, 0)
 	fmt.Print(Data[0:1024])
 	fmt.Print("made peer\n")
+	Peer2 := p2p.MakePeer(Host.Me, hashes, 5)
 
 	for !compare(Peer.DesiredFile, Data[0:1024]) {
 		fmt.Print("Working\n")
 		time.Sleep(500 * time.Millisecond)
 	}
+
+	for !compare(Peer2.DesiredFile, Data[5*1024:6*1024]) {
+		fmt.Print("Working\n")
+		time.Sleep(500 * time.Millisecond)
+	}
 	fmt.Print("Worked")
+
+	for {
+	}
 
 	// e := p2p.CreateEndpointSelf()
 	// client, err := rpc.DialHTTP("tcp", e.ServerAddress+e.Port)

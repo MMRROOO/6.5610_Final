@@ -24,6 +24,7 @@ type Peer struct {
 	Host            Endpoint
 	DesiredFileName int
 	DesiredFile     []byte
+	OwnedChunks     []int
 }
 
 func contains(s []int, e int) int {
@@ -51,10 +52,11 @@ func MakePeer(Host Endpoint, Hashes []byte, FileToDownload int) *Peer {
 	P.peers = make([]Endpoint, 0)
 	P.me = CreateEndpointSelf(&P)
 	P.Data = matrix.MakeMatrix(256, 256, 0, q)
-	P.secret = matrix.MakeMatrix(256, 1, 1, q)
+	P.secret = matrix.MakeMatrix(16, 1, 1, q)
 	P.Host = Host
 	P.Hashes = Hashes
 	P.DesiredFileName = FileToDownload
+	P.OwnedChunks = make([]int, 0)
 
 	go P.ticker()
 
@@ -74,26 +76,26 @@ func MakeSeedPeer(Data []byte, i int) Endpoint {
 	fmt.Print("made endpoint\n")
 	P.Data = matrix.MakeMatrix(256, 256, 0, q)
 	files := make([]int, 128)
-	for f := i; f < i+128; f++ {
+	for f := i; f < i+62; f++ {
 		files[f-i] = f
 	}
 
 	firstFileColumn := helper.FileNamestoMatrices(files)
-	for f := i + 128; f < i+248; f++ {
-		files[f-(i+128)] = f
-	}
+	// for f := i + 128; f < i+248; f++ {
+	// 	files[f-(i+128)] = f
+	// }
 
-	for f := i + 248; f < i+256; f++ {
-		files[f-(i+128)] = 256 * 255
-	}
+	// for f := i + 248; f < i+256; f++ {
+	// 	files[f-(i+128)] = 256 * 255
+	// }
 
-	secondFileColumn := helper.FileNamestoMatrices(files)
+	// secondFileColumn := helper.FileNamestoMatrices(files)
 
 	P.Data.CopyColumn(firstFileColumn, 4)
-	P.Data.CopyColumn(secondFileColumn, 5)
+	// P.Data.CopyColumn(secondFileColumn, 5)
 
 	FillMatrix(P.Data, Data)
-	P.secret = matrix.MakeMatrix(256, 1, 1, q)
+	P.secret = matrix.MakeMatrix(16, 1, 1, q)
 	return P.me
 }
 
@@ -233,6 +235,7 @@ func (P *Peer) GetFile(server int, index int) []byte {
 	fileMatrixes := make([]matrix.Matrix, 0)
 	for i := 0; i < 4; i++ {
 		fmt.Print(i, "index\n")
+
 		qu1 := PIR.Query(index*4+i+8, P.secret)
 		args := PIRArgs{Qu: qu1}
 		reply := PIRReply{}
@@ -248,7 +251,6 @@ func (P *Peer) GetFile(server int, index int) []byte {
 		fileMatrixes = append(fileMatrixes, PIR.Reconstruct(reply.Ans, P.secret))
 	}
 	file := FileFromMatrices(fileMatrixes)
-	fmt.Print(file)
 	return file
 }
 
@@ -256,7 +258,6 @@ func CheckHash(File matrix.Matrix, Hash [32]byte) bool {
 	columnArray := intToByte(File.GetColumn(0))
 
 	CHash := sha256.Sum256([]byte(columnArray))
-
 	return CHash == Hash
 }
 
@@ -274,23 +275,32 @@ func intToByte(s []int) []byte {
 	return r
 }
 
+func (P *Peer) PutFile(file []byte, index int) {
+	P.Data.PutFile(helper.FileChunkToMatrix(file), index)
+}
+func (P *Peer) PutFileName(fileName int, index int) {
+	P.Data.Set((index%128)*2, index/128+4, int64(fileName/256))
+	P.Data.Set((index%128)*2+1, index/128+4, int64(fileName%256))
+}
+
 func (P *Peer) ticker() {
+	args := SendPeersArgs{}
+	args.Me = P.me
+	reply := SendPeersReply{}
 
+	client, err := rpc.DialHTTP("tcp", P.Host.ServerAddress+":"+P.Host.Port)
+	if err != nil {
+		log.Fatal("dialing:", err)
+	}
+	call_err := client.Call("Host.SendPeers", &args, &reply)
+	if call_err != nil {
+		log.Fatal("arith error:", call_err)
+	}
+
+	P.peers = reply.Peers
+	done := false
 	for {
-		args := SendPeersArgs{}
-		args.Me = P.me
-		reply := SendPeersReply{}
 
-		client, err := rpc.DialHTTP("tcp", P.Host.ServerAddress+":"+P.Host.Port)
-		if err != nil {
-			log.Fatal("dialing:", err)
-		}
-		call_err := client.Call("Host.SendPeers", &args, &reply)
-		if call_err != nil {
-			log.Fatal("arith error:", call_err)
-		}
-
-		P.peers = reply.Peers
 		// fmt.Print(P.peers[0], "\n")
 
 		for i := 0; i < len(P.peers); i++ {
@@ -300,8 +310,19 @@ func (P *Peer) ticker() {
 			c := contains(FileNames, P.DesiredFileName)
 			fmt.Print(c)
 
-			if c != -1 {
+			if c != -1 && done == false {
 				P.DesiredFile = P.GetFile(i, c)
+				done = true
+			} else {
+				randFileidx := int(nrand()) % 62
+				randFileName := FileNames[randFileidx]
+				newFile := P.GetFile(i, randFileidx)
+				P.mu.Lock()
+				P.OwnedChunks = append(P.OwnedChunks, randFileName)
+				P.PutFile(newFile, len(P.OwnedChunks))
+				P.PutFileName(randFileName, len(P.OwnedChunks))
+				fmt.Print(P.me, P.OwnedChunks, "\n")
+				P.mu.Unlock()
 			}
 
 		}
