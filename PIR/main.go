@@ -34,6 +34,13 @@ func main() {
 	fmt.Print("Worked")
 
 	for {
+		// e1 := p2p.Endpoint{ServerAddress: "localhost", Port: "0000"}
+		// eList := make([]p2p.Endpoint, 1)
+		// eList[0] = e1
+		// a := p2p.PeerEndpointToMatrix(eList)
+		// b := p2p.MatrixToEndpoint(a)
+		// fmt.Print(a)
+		// fmt.Print(b)
 	}
 
 	// e := p2p.CreateEndpointSelf()

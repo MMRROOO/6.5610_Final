@@ -217,7 +217,13 @@ func (A *Matrix) Print() {
 	fmt.Print("\n")
 
 }
-
+func (A *Matrix) GetColumnMatrix(column int) Matrix {
+	C := MakeMatrix(A.Rows, 1, 0, A.Q)
+	for i := 0; i < A.Rows; i++ {
+		C.Set(i, 0, A.Get(i, column))
+	}
+	return C
+}
 func (A *Matrix) GetColumn(column int) []int {
 	C := make([]int, A.Rows)
 	for i := 0; i < A.Rows; i++ {
