@@ -4,7 +4,6 @@ import (
 	"crypto/sha256"
 	"fmt"
 	"log"
-	"net"
 	"net/http"
 	"net/rpc"
 	matrix "pir/PIR/Matrix"
@@ -38,18 +37,16 @@ var q int64 = 2147483647
 func MakePeer(Host Endpoint, Hashes []byte, FileToDownload int) *Peer {
 	P := Peer{}
 
-	rpc.Register(P)
-	rpc.HandleHTTP()
 	// Listen for requests on port 1234
-	l, e := net.Listen("tcp", "0")
-	fmt.Print("Endpoint: ", l.Addr().String(), "\n")
-	if e != nil {
-		log.Fatal("listen error:", e)
-	}
-	http.Serve(l, nil)
+	// l, e := net.Listen("tcp", "0")
+	// fmt.Print("Endpoint: ", l.Addr().String(), "\n")
+	// if e != nil {
+	// 	log.Fatal("listen error:", e)
+	// }
+	// http.Serve(l, nil)
 
 	P.peers = make([]Endpoint, 0)
-	P.me = CreateEndpointSelf(100)
+	P.me = CreateEndpointSelf(P)
 	P.Data = matrix.MakeMatrix(256, 256, 0, q)
 	P.secret = matrix.MakeMatrix(256, 1, 1, q)
 	P.Host = Host
@@ -69,16 +66,8 @@ func MakePeer(Host Endpoint, Hashes []byte, FileToDownload int) *Peer {
 func MakeSeedPeer(Data []byte, i int) Endpoint {
 	P := Peer{}
 	fmt.Print("before endpoint")
-	rpc.Register(P)
-	rpc.HandleHTTP()
-	// Listen for requests on port 1234
-	l, e := net.Listen("tcp", ":808"+fmt.Sprint(i))
-	if e != nil {
-		log.Fatal("listen error:", e)
-	}
-	http.Serve(l, nil)
 
-	P.me = CreateEndpointSelf(i)
+	P.me = CreateEndpointSelf(P)
 	fmt.Print("made endpoint")
 	P.Data = matrix.MakeMatrix(256, 256, 0, q)
 	FillMatrix(P.Data, Data)
@@ -98,7 +87,7 @@ var ipAddress string = "localhost"
 
 func handler(w http.ResponseWriter, req *http.Request) {
 	/*
-	get its own IP address so it can send to tracker
+		get its own IP address so it can send to tracker
 	*/
 	ipAddress = req.Header.Get("X-Real-Ip") // Store the IP address from the request header
 	if ipAddress == "" {
@@ -112,18 +101,18 @@ func handler(w http.ResponseWriter, req *http.Request) {
 }
 
 // TODO: Create Peers own endpoint
-func CreateEndpointSelf(i int) Endpoint {
+func CreateEndpointSelf(P Peer) Endpoint {
 	/*
-	i is ID of the peer (unique)
+		i is ID of the peer (unique)
 	*/
+	rpc.Register(P)
+	rpc.HandleHTTP()
+	port := fmt.Sprint(nrand()%1000 + 1000)
+	err := http.ListenAndServe(port, nil)
 
-	http.HandleFunc("/"+fmt.Sprint(i), handler)
-	fmt.Print("1")
-	go http.ListenAndServe(":8080", nil)
-	fmt.Print("2")
 	ownEndpoint := new(Endpoint)
 
-	ownEndpoint.Port = "8080"
+	ownEndpoint.Port = port
 	ownEndpoint.ServerAddress = ipAddress
 	return *ownEndpoint
 }
