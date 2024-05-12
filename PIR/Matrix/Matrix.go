@@ -16,7 +16,7 @@ type Matrix struct {
 	Data    []int64
 	Rows    int
 	Columns int
-	q       int64
+	Q       int64
 }
 
 type Encryption struct {
@@ -51,35 +51,35 @@ func MakeMatrix(Rows int, Columns int, MType int, q int64) Matrix {
 	seed := 1079
 
 	if MType == 0 {
-		return Matrix{Data: make([]int64, Rows*Columns), Rows: Rows, Columns: Columns, q: q}
+		return Matrix{Data: make([]int64, Rows*Columns), Rows: Rows, Columns: Columns, Q: q}
 	} else if MType == 1 {
-		M := Matrix{Data: make([]int64, Rows*Columns), Rows: Rows, Columns: Columns, q: q}
+		M := Matrix{Data: make([]int64, Rows*Columns), Rows: Rows, Columns: Columns, Q: q}
 		for i := 0; i < M.Rows; i++ {
 			for j := 0; j < M.Columns; j++ {
-				M.Set(i, j, insecure_nrand(int64(seed)%M.q))
+				M.Set(i, j, insecure_nrand(int64(seed)%M.Q))
 			}
 		}
 		return M
 	}
 	fmt.Print("incorrect MType")
-	return Matrix{Data: make([]int64, 0), Rows: 0, Columns: 0, q: 0}
+	return Matrix{Data: make([]int64, 0), Rows: 0, Columns: 0, Q: 0}
 }
 
 func Copy(A Matrix) Matrix {
-	C := Matrix{Data: make([]int64, A.Rows*A.Columns), Rows: A.Rows, Columns: A.Columns, q: A.q}
+	C := Matrix{Data: make([]int64, A.Rows*A.Columns), Rows: A.Rows, Columns: A.Columns, Q: A.Q}
 	copy(C.Data, A.Data)
 	return C
 }
 
 func EncryptionFromMatrix(Ans Matrix) Encryption {
-	A := MakeMatrix(Ans.Rows, Ans.Columns-1, 0, Ans.q)
+	A := MakeMatrix(Ans.Rows, Ans.Columns-1, 0, Ans.Q)
 
 	for i := 0; i < Ans.Rows; i++ {
 		for j := 0; j < Ans.Columns-1; j++ {
 			A.Set(i, j, Ans.Get(i, j))
 		}
 	}
-	b := MakeMatrix(Ans.Rows, 1, 0, Ans.q)
+	b := MakeMatrix(Ans.Rows, 1, 0, Ans.Q)
 	for i := 0; i < Ans.Rows; i++ {
 		b.Set(i, 0, Ans.Get(i, Ans.Columns-1))
 	}
@@ -90,7 +90,7 @@ func EncryptionFromMatrix(Ans Matrix) Encryption {
 
 func MatrixFromEncryption(E Encryption) Matrix {
 
-	C := Matrix{Data: make([]int64, E.A.Rows*(E.A.Columns+1)), Rows: E.A.Rows, Columns: E.A.Columns + 1, q: E.A.q}
+	C := Matrix{Data: make([]int64, E.A.Rows*(E.A.Columns+1)), Rows: E.A.Rows, Columns: E.A.Columns + 1, Q: E.A.Q}
 	for i := 0; i < E.A.Rows; i++ {
 		for j := 0; j < (E.A.Columns + 1); j++ {
 			if j == E.A.Columns {
@@ -162,22 +162,22 @@ func (A *Matrix) ScalarMultiply(value int64) {
 }
 
 func (A *Matrix) Get(row int, column int) int64 {
-	return A.Data[row*A.Columns+column] % A.q
+	return A.Data[row*A.Columns+column] % A.Q
 }
 
 func (A *Matrix) Set(row int, column int, value int64) {
-	A.Data[row*A.Columns+column] = value % A.q
+	A.Data[row*A.Columns+column] = value % A.Q
 }
 
 func (A *Matrix) MultiplyToIndex(row int, column int, value int64) {
-	A.Data[row*A.Columns+column] = (A.Data[row*A.Columns+column] * value) % A.q
+	A.Data[row*A.Columns+column] = (A.Data[row*A.Columns+column] * value) % A.Q
 }
 func (A *Matrix) AddToIndex(row int, column int, value int64) {
-	A.Data[row*A.Columns+column] = (A.Data[row*A.Columns+column] + value) % A.q
+	A.Data[row*A.Columns+column] = (A.Data[row*A.Columns+column] + value) % A.Q
 }
 
 func (A *Matrix) SubtractFromIndex(row int, column int, value int64) {
-	A.Data[row*A.Columns+column] = (A.Data[row*A.Columns+column] + (A.q - value)) % A.q
+	A.Data[row*A.Columns+column] = (A.Data[row*A.Columns+column] + (A.Q - value)) % A.Q
 }
 
 func (A *Matrix) Print() {
@@ -218,7 +218,7 @@ func (A *Matrix) GetColumn(column int) []int {
 	return C
 }
 func (A *Matrix) PrintColumn(column int) {
-	C := MakeMatrix(A.Rows, 1, 0, A.q)
+	C := MakeMatrix(A.Rows, 1, 0, A.Q)
 
 	for i := 0; i < A.Rows; i++ {
 		C.Set(i, 0, A.Get(i, column))
@@ -230,7 +230,7 @@ func (A *Matrix) PrintColumn(column int) {
 // each column of length k stores one value from original matrix
 func Decompose(A Matrix) Matrix {
 	DecompSize := logQ_logP
-	B := MakeMatrix(A.Rows*DecompSize, A.Columns, 0, A.q)
+	B := MakeMatrix(A.Rows*DecompSize, A.Columns, 0, A.Q)
 
 	for r := 0; r < A.Rows; r++ {
 		for c := 0; c < A.Columns; c++ {
@@ -246,7 +246,7 @@ func Decompose(A Matrix) Matrix {
 
 func Compose(A Matrix) Matrix {
 	DecompSize := logQ_logP
-	B := MakeMatrix(A.Rows/DecompSize, A.Columns, 0, A.q)
+	B := MakeMatrix(A.Rows/DecompSize, A.Columns, 0, A.Q)
 
 	for r := 0; r < B.Rows; r++ {
 		for c := 0; c < B.Columns; c++ {
@@ -260,7 +260,7 @@ func Compose(A Matrix) Matrix {
 }
 
 func (A *Matrix) Transpose() Matrix {
-	T := MakeMatrix(A.Columns, A.Rows, 0, A.q)
+	T := MakeMatrix(A.Columns, A.Rows, 0, A.Q)
 	for r := 0; r < A.Rows; r++ {
 		for c := 0; c < A.Columns; c++ {
 			T.Set(c, r, A.Get(r, c))
@@ -272,7 +272,7 @@ func (A *Matrix) Transpose() Matrix {
 func JoinVertical(A Matrix, B Matrix) Matrix {
 	if A.Columns != B.Columns {
 		fmt.Print("Different number of columns")
-		return MakeMatrix(0, 0, 0, A.q)
+		return MakeMatrix(0, 0, 0, A.Q)
 	}
 	J := MakeMatrix(A.Rows+B.Rows, A.Columns, 0, q)
 	for r := 0; r < A.Rows+B.Rows; r++ {
@@ -287,9 +287,15 @@ func JoinVertical(A Matrix, B Matrix) Matrix {
 	return J
 }
 
+func (A *Matrix) CopyColumn(B Matrix, C int) {
+	for i := 0; i < A.Rows; i++ {
+		A.Set(i, C, B.Get(i, 0))
+	}
+}
+
 func SplitVertical(A Matrix) (Matrix, Matrix) {
-	T := MakeMatrix(A.Rows-1, A.Columns, 0, A.q)
-	B := MakeMatrix(1, A.Columns, 0, A.q)
+	T := MakeMatrix(A.Rows-1, A.Columns, 0, A.Q)
+	B := MakeMatrix(1, A.Columns, 0, A.Q)
 	T.Data = A.Data[0 : A.Columns*(A.Rows-1)]
 	B.Data = A.Data[A.Columns*(A.Rows-1) : A.Columns*(A.Rows)]
 
@@ -301,18 +307,18 @@ func (A *Matrix) LWERound() {
 		for j := 0; j < A.Columns; j++ {
 
 			val := A.Get(i, j)
-			roundedVal := (((val + (q/(DATA_SIZE))/2) / (q / DATA_SIZE)) % A.q) % (DATA_SIZE)
+			roundedVal := (((val + (q/(DATA_SIZE))/2) / (q / DATA_SIZE)) % A.Q) % (DATA_SIZE)
 
 			A.Set(i, j, roundedVal)
 		}
 	}
 }
 
-func IsEqual(A Matrix, B Matrix) (bool) {
+func IsEqual(A Matrix, B Matrix) bool {
 	/*
-	Tells whether matrices A, B are equal
+		Tells whether matrices A, B are equal
 	*/
-	
+
 	if A.Rows != B.Rows || A.Columns != B.Columns {
 		return false
 	}

@@ -10,6 +10,7 @@ import (
 	"net/rpc"
 	matrix "pir/PIR/Matrix"
 	PIR "pir/PIR/PIR"
+	"pir/PIR/helper"
 	"sync"
 )
 
@@ -72,6 +73,25 @@ func MakeSeedPeer(Data []byte, i int) Endpoint {
 	P.me = CreateEndpointSelf(&P)
 	fmt.Print("made endpoint\n")
 	P.Data = matrix.MakeMatrix(256, 256, 0, q)
+	files := make([]int, 128)
+	for f := i; f < i+128; f++ {
+		files[f-i] = f
+	}
+
+	firstFileColumn := helper.FileNamestoMatrices(files)
+	for f := i + 128; f < i+248; f++ {
+		files[f-(i+128)] = f
+	}
+
+	for f := i + 248; f < i+256; f++ {
+		files[f-(i+128)] = 256 * 255
+	}
+
+	secondFileColumn := helper.FileNamestoMatrices(files)
+
+	P.Data.CopyColumn(firstFileColumn, 4)
+	P.Data.CopyColumn(secondFileColumn, 5)
+
 	FillMatrix(P.Data, Data)
 	P.secret = matrix.MakeMatrix(256, 1, 1, q)
 	return P.me
@@ -138,12 +158,12 @@ func RegisterWithEndpoint(P *Peer, e Endpoint) {
 
 // TODO: given vector of file names return list of file names it represents
 func MatrixToFileNames(M matrix.Matrix) []int {
-	return make([]int, 0)
+	return helper.MatrixToFileNames(M)
 }
 
 // TODO: given 4 matrixes return file data
 func FileFromMatrices(M []matrix.Matrix) []byte {
-	return make([]byte, 0)
+	return helper.MatrixtoFileChunk(M)
 }
 
 // TODO: given vector of peers return list of file names it represents
@@ -212,7 +232,8 @@ func (P *Peer) GetFile(server int, index int) []byte {
 
 	fileMatrixes := make([]matrix.Matrix, 0)
 	for i := 0; i < 4; i++ {
-		qu1 := PIR.Query(i, P.secret)
+		fmt.Print(i, "index\n")
+		qu1 := PIR.Query(index*4+i+8, P.secret)
 		args := PIRArgs{Qu: qu1}
 		reply := PIRReply{}
 		pir_client, pir_err := rpc.DialHTTP("tcp", P.peers[server].ServerAddress+":"+P.peers[server].Port)
@@ -226,8 +247,9 @@ func (P *Peer) GetFile(server int, index int) []byte {
 
 		fileMatrixes = append(fileMatrixes, PIR.Reconstruct(reply.Ans, P.secret))
 	}
-
-	return FileFromMatrices(fileMatrixes)
+	file := FileFromMatrices(fileMatrixes)
+	fmt.Print(file)
+	return file
 }
 
 func CheckHash(File matrix.Matrix, Hash [32]byte) bool {
@@ -239,6 +261,7 @@ func CheckHash(File matrix.Matrix, Hash [32]byte) bool {
 }
 
 func (P *Peer) PIRAns(args *PIRArgs, reply *PIRReply) error {
+	// fmt.Print(args.Qu.A)
 	reply.Ans = PIR.Ans(P.Data, args.Qu)
 	return nil
 }
@@ -268,11 +291,14 @@ func (P *Peer) ticker() {
 		}
 
 		P.peers = reply.Peers
-		fmt.Print(P.peers, "\n")
+		// fmt.Print(P.peers[0], "\n")
 
 		for i := 0; i < len(P.peers); i++ {
+			fmt.Print("asking peers\n")
+
 			FileNames := P.GetFileNames(i)
 			c := contains(FileNames, P.DesiredFileName)
+			fmt.Print(c)
 
 			if c != -1 {
 				P.DesiredFile = P.GetFile(i, c)

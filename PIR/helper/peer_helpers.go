@@ -3,22 +3,17 @@ package helper
 import (
 	matrix "pir/PIR/Matrix"
 	// pir "pir/PIR/PIR"
-	p2p "pir/PIR/P2P"
-
-	"sync"
 )
 
-type Peer struct {
-	peers  []p2p.Endpoint
-	mu     sync.Mutex
-	me     p2p.Endpoint
-	Data   matrix.Matrix
-	secret matrix.Matrix
-	Hashes []byte
-	Host   p2p.Endpoint
-}
-
-
+// type Peer struct {
+// 	peers  []p2p.Endpoint
+// 	mu     sync.Mutex
+// 	me     p2p.Endpoint
+// 	Data   matrix.Matrix
+// 	secret matrix.Matrix
+// 	Hashes []byte
+// 	Host   p2p.Endpoint
+// }
 
 /*
 Args:
@@ -35,12 +30,12 @@ func MatrixToFileNames(M matrix.Matrix) []int {
 		}
 	}
 
-	res  := make([]int, 0)
+	res := make([]int, 0)
 	cur := 0
 	lookVal := 0 // the val currently looking at when iterating through the matrix
 	for r := 0; r < 256; r++ {
 		lookVal = int(M.Get(r, 0))
-		if r % 2 == 0 {
+		if r%2 == 0 {
 			cur = lookVal * 256
 		} else {
 			cur += lookVal
@@ -56,11 +51,22 @@ Args: []int `files` - list of file indices. Reverse the effect of MatrixToFileNa
 
 Output: matrix.Matrix of size 256 x 1. Each value in the matrix represents a byte
 */
-func FileFromMatrices(files []int) matrix.Matrix {
+func FileNamestoMatrices(files []int) matrix.Matrix {
 	res := matrix.MakeMatrix(256, 1, 0, 256)
 	for i := 0; i < 128; i++ {
-		res.Set(i * 2, 0, int64(files[i] / 256))
-		res.Set(i * 2 + 1, 0, int64(files[i] % 256))
+		res.Set(i*2, 0, int64(files[i]/256))
+		res.Set(i*2+1, 0, int64(files[i]%256))
+	}
+	return res
+}
+
+func MatrixtoFileChunk(M []matrix.Matrix) []byte {
+	res := make([]byte, 256*4)
+	for i := 0; i < 4; i++ {
+		for j := 0; j < 256; j++ {
+
+			res[i*256+j] = byte(M[i].Get(j, 0))
+		}
 	}
 	return res
 }

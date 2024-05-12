@@ -18,11 +18,12 @@ func main() {
 	fmt.Print("generated hashes\n")
 
 	Peer := p2p.MakePeer(Host.Me, hashes, 0)
+	fmt.Print(Data[0:1024])
 	fmt.Print("made peer\n")
 
 	for !compare(Peer.DesiredFile, Data[0:1024]) {
 		fmt.Print("Working\n")
-		time.Sleep(100 * time.Millisecond)
+		time.Sleep(500 * time.Millisecond)
 	}
 	fmt.Print("Worked")
 
