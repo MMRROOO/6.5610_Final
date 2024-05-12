@@ -2,8 +2,6 @@ package p2p
 
 import (
 	"fmt"
-	"log"
-	"net"
 	"net/http"
 	"net/rpc"
 )
@@ -19,16 +17,7 @@ type Host struct {
 func MakeHost(Data []byte) *Host {
 	H := Host{}
 	fmt.Printf("before register")
-	rpc.Register(&H)
-	rpc.HandleHTTP()
-	// Listen for requests on port 1234
-	l, e := net.Listen("tcp", ":0")
-
-	if e != nil {
-		log.Fatal("listen error:", e)
-	}
-	fmt.Print("Endpoint: ", l, "\n")
-	http.Serve(l, nil)
+	H.Me = CreateEndpointHost(&H)
 	H.Peers = MakeAllSeedPeers(H, Data)
 	// H.Me = CreateEndpointSelf(10000)
 
@@ -40,6 +29,32 @@ func MakeHost(Data []byte) *Host {
 	// H.Hashes = matrix.MakeMatrix(32, NFiles, 0, q)
 	// FillWithHashes(H.Hashes, H.Data)
 	return &H
+}
+
+func CreateEndpointHost(H *Host) Endpoint {
+	/*
+		i is ID of the peer (unique)
+	*/
+
+	port := fmt.Sprint(nrand()%1000 + 1000)
+	ownEndpoint := new(Endpoint)
+
+	ownEndpoint.Port = port
+	ownEndpoint.ServerAddress = ipAddress
+	go RegisterWithEndpointHost(H, *ownEndpoint)
+
+	return *ownEndpoint
+}
+
+func RegisterWithEndpointHost(H *Host, e Endpoint) {
+	rpc.Register(H)
+	rpc.HandleHTTP()
+	address := e.ServerAddress + ":" + e.Port
+	err := http.ListenAndServe(address, nil)
+	if err != nil {
+		fmt.Print("network error", err)
+	}
+
 }
 
 func MakeAllSeedPeers(H Host, Data []byte) []Endpoint {

@@ -1,4 +1,4 @@
-package PIR
+package pir
 
 import (
 	"math"

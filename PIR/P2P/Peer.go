@@ -1,13 +1,15 @@
 package p2p
 
 import (
+	"crypto/rand"
 	"crypto/sha256"
 	"fmt"
 	"log"
+	"math/big"
 	"net/http"
 	"net/rpc"
 	matrix "pir/PIR/Matrix"
-	"pir/PIR/PIR"
+	PIR "pir/PIR/PIR"
 	"sync"
 )
 
@@ -46,7 +48,7 @@ func MakePeer(Host Endpoint, Hashes []byte, FileToDownload int) *Peer {
 	// http.Serve(l, nil)
 
 	P.peers = make([]Endpoint, 0)
-	P.me = CreateEndpointSelf(P)
+	P.me = CreateEndpointSelf(&P)
 	P.Data = matrix.MakeMatrix(256, 256, 0, q)
 	P.secret = matrix.MakeMatrix(256, 1, 1, q)
 	P.Host = Host
@@ -65,10 +67,10 @@ func MakePeer(Host Endpoint, Hashes []byte, FileToDownload int) *Peer {
 
 func MakeSeedPeer(Data []byte, i int) Endpoint {
 	P := Peer{}
-	fmt.Print("before endpoint")
+	fmt.Print("before endpoint\n")
 
-	P.me = CreateEndpointSelf(P)
-	fmt.Print("made endpoint")
+	P.me = CreateEndpointSelf(&P)
+	fmt.Print("made endpoint\n")
 	P.Data = matrix.MakeMatrix(256, 256, 0, q)
 	FillMatrix(P.Data, Data)
 	P.secret = matrix.MakeMatrix(256, 1, 1, q)
@@ -99,22 +101,39 @@ func handler(w http.ResponseWriter, req *http.Request) {
 	ipAddress = "localhost"
 
 }
+func nrand() int64 { //secure implementation
+	max := big.NewInt(int64(1) << 62)
+	bigx, _ := rand.Int(rand.Reader, max)
+	x := bigx.Int64()
+	return x
+}
 
 // TODO: Create Peers own endpoint
-func CreateEndpointSelf(P Peer) Endpoint {
+func CreateEndpointSelf(P *Peer) Endpoint {
 	/*
 		i is ID of the peer (unique)
 	*/
-	rpc.Register(P)
-	rpc.HandleHTTP()
-	port := fmt.Sprint(nrand()%1000 + 1000)
-	err := http.ListenAndServe(port, nil)
 
-	ownEndpoint := new(Endpoint)
+	port := fmt.Sprint(nrand()%1000 + 1000)
+	ownEndpoint := Endpoint{}
 
 	ownEndpoint.Port = port
 	ownEndpoint.ServerAddress = ipAddress
-	return *ownEndpoint
+	fmt.Print(ownEndpoint, "\n")
+	go RegisterWithEndpoint(P, ownEndpoint)
+
+	return ownEndpoint
+}
+
+func RegisterWithEndpoint(P *Peer, e Endpoint) {
+	rpc.Register(P)
+	http.HandleFunc("/"+fmt.Sprint(e.Port), handler)
+	address := e.ServerAddress + ":" + e.Port
+	err := http.ListenAndServe(address, nil)
+	if err != nil {
+		fmt.Print("network error ", err, "\n")
+	}
+
 }
 
 // TODO: given vector of file names return list of file names it represents
@@ -249,6 +268,7 @@ func (P *Peer) ticker() {
 		}
 
 		P.peers = reply.Peers
+		fmt.Print(P.peers, "\n")
 
 		for i := 0; i < len(P.peers); i++ {
 			FileNames := P.GetFileNames(i)

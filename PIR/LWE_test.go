@@ -1,19 +1,18 @@
 package main
 
 import (
-	lwe "pir/PIR/LWE"
 	matrix "pir/PIR/Matrix"
 	"testing"
 )
 
 func TestEncDec(t *testing.T) {
 
-	secret := matrix.MakeMatrix(lwe.N, 1, 1, 2147483647)
-	pt := matrix.MakeMatrix(lwe.M, 1, 1, 2147483647)
+	secret := matrix.MakeMatrix(matrix.N, 1, 1, 2147483647)
+	pt := matrix.MakeMatrix(matrix.M, 1, 1, 2147483647)
 	pt.LWERound()
-	enc := lwe.ENC(secret, pt)
-	dec := lwe.DEC(secret, enc.A, enc.B)
-	for i := 0; i < lwe.M; i++ {
+	enc := matrix.ENC(secret, pt)
+	dec := matrix.DEC(secret, enc.A, enc.B)
+	for i := 0; i < matrix.M; i++ {
 		if pt.Get(i, 0) != dec.Get(i, 0) {
 			t.Errorf("decryption failed at row %d", i)
 			t.Log("Expected ", pt.Get(i, 0), " got ", dec.Get(i, 0))
@@ -24,9 +23,9 @@ func TestEncDec(t *testing.T) {
 }
 
 func TestLWERound(t *testing.T) {
-	pt := matrix.MakeMatrix(lwe.M, 1, 1, 2147483647)
+	pt := matrix.MakeMatrix(matrix.M, 1, 1, 2147483647)
 	pt.LWERound()
-	for i := 0; i < lwe.M; i++ {
+	for i := 0; i < matrix.M; i++ {
 		if pt.Get(i, 0) >= 2147483647 {
 			t.Errorf("LWERound failed at row %d", i)
 			t.Log("Expected ", pt.Get(i, 0), " to be less than ", 2147483647)

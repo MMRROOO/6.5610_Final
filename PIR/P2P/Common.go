@@ -29,7 +29,7 @@ type GetFileReply struct {
 	Peer *Endpoint
 }
 
-type  Endpoint struct {
+type Endpoint struct {
 	ServerAddress string
 	Port          string
 }
