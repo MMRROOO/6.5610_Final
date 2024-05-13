@@ -174,7 +174,6 @@ func MatrixToPeers(M matrix.Matrix) []int {
 }
 
 func (P *Peer) GetFileNames(server int) []int {
-
 	qu1 := PIR.Query(4, P.secret)
 	args := PIRArgs{Qu: qu1}
 	reply := PIRReply{}
@@ -234,10 +233,10 @@ func (P *Peer) GetFile(server int, index int) []byte {
 
 	fileMatrixes := make([]matrix.Matrix, 0)
 	for i := 0; i < 4; i++ {
-		fmt.Print(i, "index\n")
 
 		qu1 := PIR.Query(index*4+i+8, P.secret)
-		args := PIRArgs{Qu: qu1}
+		args := PIRArgs{Qu: qu1, Me: P.me}
+
 		reply := PIRReply{}
 		pir_client, pir_err := rpc.DialHTTP("tcp", P.peers[server].ServerAddress+":"+P.peers[server].Port)
 		if pir_err != nil {
@@ -262,7 +261,7 @@ func CheckHash(File matrix.Matrix, Hash [32]byte) bool {
 }
 
 func (P *Peer) PIRAns(args *PIRArgs, reply *PIRReply) error {
-	// fmt.Print(args.Qu.A)
+	P.addPeerToMatrix(args.Me, len(P.peers))
 	reply.Ans = PIR.Ans(P.Data, args.Qu)
 	return nil
 }
@@ -299,20 +298,18 @@ func (P *Peer) GetNewPeer(e Endpoint) {
 		if pir_call_err != nil {
 			log.Fatal("arith error:", pir_call_err)
 		}
+		tmp := MatrixToEndpoint(PIR.Reconstruct(reply.Ans, P.secret))
+		fmt.Print(PIR.Reconstruct(reply.Ans, P.secret), e, "\n")
 
-		endpoints = append(endpoints, MatrixToEndpoint(PIR.Reconstruct(reply.Ans, P.secret))...)
+		endpoints = append(endpoints, tmp...)
 	}
 
 	if len(endpoints) == 0 {
 		return
 	}
 	newRandomPeer := endpoints[int(nrand())%len(endpoints)]
+	fmt.Print(newRandomPeer, "\n")
 
-	for i := 0; i < len(P.peers); i++ {
-		if newRandomPeer.Port == P.peers[i].Port && newRandomPeer.ServerAddress == P.peers[i].ServerAddress {
-			return
-		}
-	}
 	P.addPeerToMatrix(newRandomPeer, len(P.peers))
 
 	P.peers = append(P.peers, newRandomPeer)
@@ -320,6 +317,14 @@ func (P *Peer) GetNewPeer(e Endpoint) {
 }
 
 func (P *Peer) addPeerToMatrix(e Endpoint, index int) {
+	if e.Port == P.me.Port && e.ServerAddress == P.me.ServerAddress {
+		return
+	}
+	for i := 0; i < len(P.peers); i++ {
+		if e.Port == P.peers[i].Port && e.ServerAddress == P.peers[i].ServerAddress {
+			return
+		}
+	}
 	col := index / (256 / 16)
 	dataCol := P.Data.GetColumnMatrix(col)
 	endpoints := MatrixToEndpoint(dataCol)
@@ -342,6 +347,9 @@ func (P *Peer) ticker() {
 	if call_err != nil {
 		log.Fatal("arith error:", call_err)
 	}
+	for i := 0; i < len(reply.Peers); i++ {
+		P.addPeerToMatrix(reply.Peers[i], i)
+	}
 
 	P.peers = reply.Peers
 	done := false
@@ -350,11 +358,9 @@ func (P *Peer) ticker() {
 		// fmt.Print(P.peers[0], "\n")
 
 		for i := 0; i < len(P.peers); i++ {
-			fmt.Print("asking peers\n")
 
 			FileNames := P.GetFileNames(i)
 			c := contains(FileNames, P.DesiredFileName)
-			fmt.Print(c)
 
 			if c != -1 && done == false {
 				P.DesiredFile = P.GetFile(i, c)
@@ -367,12 +373,15 @@ func (P *Peer) ticker() {
 				P.OwnedChunks = append(P.OwnedChunks, randFileName)
 				P.PutFile(newFile, len(P.OwnedChunks))
 				P.PutFileName(randFileName, len(P.OwnedChunks))
-				fmt.Print(P.me, P.OwnedChunks, "\n")
 				P.mu.Unlock()
 			}
 
 			if nrand()%10 == 0 {
+				fmt.Print("me: ", P.me, " peers: ", P.peers, "\n")
+
 				P.GetNewPeer(P.peers[i])
+				fmt.Print("me: ", P.me, " peers: ", P.peers, "\n")
+
 			}
 
 		}

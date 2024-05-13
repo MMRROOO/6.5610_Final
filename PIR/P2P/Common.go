@@ -12,6 +12,7 @@ type SendPeersReply struct {
 	Peers []Endpoint
 }
 type PIRArgs struct {
+	Me Endpoint
 	Qu matrix.Encryption
 }
 
