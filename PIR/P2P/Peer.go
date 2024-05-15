@@ -155,7 +155,6 @@ func RegisterWithEndpoint(P *Peer, e Endpoint) {
 	if err != nil {
 		fmt.Print("network error ", err, "\n")
 	}
-
 }
 
 // TODO: given vector of file names return list of file names it represents

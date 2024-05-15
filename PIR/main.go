@@ -17,33 +17,33 @@ func main() {
 	hashes := Hashes(Data)
 	fmt.Print("generated hashes\n")
 
-	Peer := p2p.MakePeer(Host.Me, hashes, 0)
+	Peer := p2p.MakePeer(Host.Me, hashes, 1)
 	fmt.Print(Data[0:1024])
 	fmt.Print("made peer\n")
-	Peer2 := p2p.MakePeer(Host.Me, hashes, 5)
+	Peer2 := p2p.MakePeer(Host.Me, hashes, 6)
 
 	// p2p.MakePeer(Host.Me, hashes, 8)
 
-	for !compare(Peer.DesiredFile, Data[0:1024]) {
-		fmt.Print("Working\n")
+	for !compare(Peer.DesiredFile, Data[1*1024:2*1024]) {
+		fmt.Print("Working1\n")
 		time.Sleep(500 * time.Millisecond)
 	}
 
-	for !compare(Peer2.DesiredFile, Data[5*1024:6*1024]) {
-		fmt.Print("Working\n")
+	for !compare(Peer2.DesiredFile, Data[6*1024:7*1024]) {
+		fmt.Print("Working2\n")
 		time.Sleep(500 * time.Millisecond)
 	}
 	fmt.Print("Worked")
 
-	for {
-		// e1 := p2p.Endpoint{ServerAddress: "localhost", Port: "0000"}
-		// eList := make([]p2p.Endpoint, 1)
-		// eList[0] = e1
-		// a := p2p.PeerEndpointToMatrix(eList)
-		// b := p2p.MatrixToEndpoint(a)
-		// fmt.Print(a)
-		// fmt.Print(b)
-	}
+	// for {
+	// e1 := p2p.Endpoint{ServerAddress: "localhost", Port: "0000"}
+	// eList := make([]p2p.Endpoint, 1)
+	// eList[0] = e1
+	// a := p2p.PeerEndpointToMatrix(eList)
+	// b := p2p.MatrixToEndpoint(a)
+	// fmt.Print(a)
+	// fmt.Print(b)
+	// }
 
 	// e := p2p.CreateEndpointSelf()
 	// client, err := rpc.DialHTTP("tcp", e.ServerAddress+e.Port)

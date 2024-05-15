@@ -23,7 +23,7 @@ func ENC(secret Matrix, v Matrix) Encryption {
 	v_copy := Copy(v)
 
 	As.Multiply(A, secret)
-	As.AddError(4)
+	As.AddError(200)
 	v_copy.ScalarMultiply(q / DATA_SIZE) //change this to fix aliasing issue
 	As.Add((v_copy))
 
