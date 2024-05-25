@@ -22,8 +22,8 @@ type Peer struct {
 	secret          matrix.Matrix
 	Hashes          []byte
 	Host            Endpoint
-	DesiredFileName int
-	DesiredFile     []byte
+	DesiredChunkName int
+	DesiredChunk     []byte
 	OwnedChunks     []int
 }
 
@@ -38,7 +38,7 @@ func contains(s []int, e int) int {
 
 var q int64 = 2147483647
 
-func MakePeer(Host Endpoint, Hashes []byte, FileToDownload int) *Peer {
+func MakePeer(Host Endpoint, Hashes []byte, ChunkToDownload int) *Peer {
 	P := Peer{}
 
 	// Listen for requests on port 1234
@@ -55,7 +55,7 @@ func MakePeer(Host Endpoint, Hashes []byte, FileToDownload int) *Peer {
 	P.secret = matrix.MakeMatrix(16, 1, 1, q)
 	P.Host = Host
 	P.Hashes = Hashes
-	P.DesiredFileName = FileToDownload
+	P.DesiredChunkName = ChunkToDownload
 	P.OwnedChunks = make([]int, 0)
 
 	go P.ticker()
@@ -75,12 +75,12 @@ func MakeSeedPeer(Data []byte, i int) Endpoint {
 	P.me = CreateEndpointSelf(&P)
 	fmt.Print("made endpoint\n")
 	P.Data = matrix.MakeMatrix(256, 256, 0, q)
-	files := make([]int, 128)
+	chunks := make([]int, 128)
 	for f := i; f < i+62; f++ {
-		files[f-i] = f
+		chunks[f-i] = f
 	}
 
-	firstFileColumn := helper.FileNamestoMatrices(files)
+	firstFileColumn := helper.FileNamestoMatrices(chunks)
 	// for f := i + 128; f < i+248; f++ {
 	// 	files[f-(i+128)] = f
 	// }
@@ -158,12 +158,12 @@ func RegisterWithEndpoint(P *Peer, e Endpoint) {
 }
 
 // TODO: given vector of file names return list of file names it represents
-func MatrixToFileNames(M matrix.Matrix) []int {
+func MatrixToChunkNames(M matrix.Matrix) []int {
 	return helper.MatrixToFileNames(M)
 }
 
 // TODO: given 4 matrixes return file data
-func FileFromMatrices(M []matrix.Matrix) []byte {
+func ChunkFromMatrices(M []matrix.Matrix) []byte {
 	return helper.MatrixtoFileChunk(M)
 }
 
@@ -172,7 +172,7 @@ func MatrixToPeers(M matrix.Matrix) []int {
 	return make([]int, 0)
 }
 
-func (P *Peer) GetFileNames(server int) []int {
+func (P *Peer) GetChunkNames(server int) []int {
 	qu1 := PIR.Query(4, P.secret)
 	args := PIRArgs{Qu: qu1}
 	reply := PIRReply{}
@@ -186,7 +186,7 @@ func (P *Peer) GetFileNames(server int) []int {
 		log.Fatal("arith error:", call_err)
 	}
 
-	FileNames := MatrixToFileNames(PIR.Reconstruct(reply.Ans, P.secret))
+	ChunkNames := MatrixToChunkNames(PIR.Reconstruct(reply.Ans, P.secret))
 
 	qu2 := PIR.Query(5, P.secret)
 	args = PIRArgs{Qu: qu2}
@@ -201,9 +201,9 @@ func (P *Peer) GetFileNames(server int) []int {
 		log.Fatal("arith error:", pir_call_err)
 	}
 
-	FileNames = append(FileNames, MatrixToFileNames(PIR.Reconstruct(reply.Ans, P.secret))...)
+	ChunkNames = append(ChunkNames, MatrixToChunkNames(PIR.Reconstruct(reply.Ans, P.secret))...)
 
-	return FileNames
+	return ChunkNames
 }
 
 func (P *Peer) GetPeers(server int) []int {
@@ -228,7 +228,8 @@ func (P *Peer) GetPeers(server int) []int {
 	return knownPeers
 }
 
-func (P *Peer) GetFile(server int, index int) []byte {
+//asks for chunk at index from server
+func (P *Peer) GetChunk(server int, index int) []byte {
 
 	fileMatrixes := make([]matrix.Matrix, 0)
 	for i := 0; i < 4; i++ {
@@ -248,12 +249,12 @@ func (P *Peer) GetFile(server int, index int) []byte {
 
 		fileMatrixes = append(fileMatrixes, PIR.Reconstruct(reply.Ans, P.secret))
 	}
-	file := FileFromMatrices(fileMatrixes)
+	file := ChunkFromMatrices(fileMatrixes)
 	return file
 }
 
-func CheckHash(File matrix.Matrix, Hash [32]byte) bool {
-	columnArray := intToByte(File.GetColumn(0))
+func CheckHash(chunk matrix.Matrix, Hash [32]byte) bool {
+	columnArray := intToByte(chunk.GetColumn(0))
 
 	CHash := sha256.Sum256([]byte(columnArray))
 	return CHash == Hash
@@ -273,12 +274,15 @@ func intToByte(s []int) []byte {
 	return r
 }
 
-func (P *Peer) PutFile(file []byte, index int) {
-	P.Data.PutFile(helper.FileChunkToMatrix(file), index)
+//puts bytes into internal matrix data structure
+func (P *Peer) PutChunk(chunk []byte, index int) {
+	P.Data.PutFile(helper.FileChunkToMatrix(chunk), index)
 }
-func (P *Peer) PutFileName(fileName int, index int) {
-	P.Data.Set((index%128)*2, index/128+4, int64(fileName/256))
-	P.Data.Set((index%128)*2+1, index/128+4, int64(fileName%256))
+
+//puts flile name into index in interal matrix data stucture
+func (P *Peer) PutChunkName(chunkName int, index int) {
+	P.Data.Set((index%128)*2, index/128+4, int64(chunkName/256))
+	P.Data.Set((index%128)*2+1, index/128+4, int64(chunkName%256))
 }
 
 func (P *Peer) GetNewPeer(e Endpoint) {
@@ -358,22 +362,23 @@ func (P *Peer) ticker() {
 
 		for i := 0; i < len(P.peers); i++ {
 
-			FileNames := P.GetFileNames(i)
-			c := contains(FileNames, P.DesiredFileName)
+			ChunkNames := P.GetChunkNames(i)
+			c := contains(ChunkNames, P.DesiredChunkName)
 
 			if c != -1 && done == false {
-				P.DesiredFile = P.GetFile(i, c)
+				P.DesiredChunk = P.GetChunk(i, c)
 				done = true
 			} else {
-				randFileidx := int(nrand()) % 62
-				randFileName := FileNames[randFileidx]
-				newFile := P.GetFile(i, randFileidx)
+				randChunkidx := int(nrand()) % 62
+				randChunkName := ChunkNames[randChunkidx]
+				newChunk := P.GetChunk(i, randChunkidx)
 				P.mu.Lock()
-				P.OwnedChunks = append(P.OwnedChunks, randFileName)
-				P.PutFile(newFile, len(P.OwnedChunks))
-				P.PutFileName(randFileName, len(P.OwnedChunks))
+				P.OwnedChunks = append(P.OwnedChunks, randChunkName)
+				P.PutChunk(newChunk, len(P.OwnedChunks))
+				P.PutChunkName(randChunkName, len(P.OwnedChunks))
 				P.mu.Unlock()
 			}
+
 
 			if nrand()%10 == 0 {
 				fmt.Print("me: ", P.me, " peers: ", P.peers, "\n")

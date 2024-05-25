@@ -24,12 +24,12 @@ func main() {
 
 	// p2p.MakePeer(Host.Me, hashes, 8)
 
-	for !compare(Peer.DesiredFile, Data[1*1024:2*1024]) {
+	for !compare(Peer.DesiredChunk, Data[1*1024:2*1024]) {
 		fmt.Print("Working1\n")
 		time.Sleep(500 * time.Millisecond)
 	}
 
-	for !compare(Peer2.DesiredFile, Data[6*1024:7*1024]) {
+	for !compare(Peer2.DesiredChunk, Data[6*1024:7*1024]) {
 		fmt.Print("Working2\n")
 		time.Sleep(500 * time.Millisecond)
 	}
